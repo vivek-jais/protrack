@@ -1,0 +1,9 @@
+(app)--> have all ui pages 
+(auth) --> have authentication for google only
+
+api/ --> 
+    auth/---for nextauth
+    user/
+    class/
+    
+
