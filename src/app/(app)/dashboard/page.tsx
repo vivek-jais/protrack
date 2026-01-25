@@ -13,6 +13,7 @@ import {
   Sparkles,
   TrendingUp
 } from "lucide-react";
+import { useEffect } from "react";
 
 // Mock Data
 const enrolledClasses = [
@@ -56,6 +57,20 @@ const stats = [
 ];
 
 export default function StudentDashboard() {
+   
+  useEffect(()=>{
+    GetAllUsers();
+  },[]);
+
+  const GetAllUsers = async()=>{
+     const res = await fetch("/api/user/", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" }
+      });
+      console.log(res);
+      
+  }
+
   return (
     <div className="space-y-10 p-2">
       
