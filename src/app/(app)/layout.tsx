@@ -3,6 +3,7 @@
 import { SidebarProvider } from "@/context/SidebarContext";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
+import ChatPage from "@/components/ChatPage";
 
 export default function AppLayout({
   children,
@@ -18,6 +19,7 @@ export default function AppLayout({
           <Sidebar />
           <main className="flex-1 p-6 md:p-8">
             {children}
+            <ChatPage/>
           </main>
         </div>
       </div>
