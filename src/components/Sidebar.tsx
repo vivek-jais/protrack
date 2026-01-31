@@ -19,7 +19,7 @@ import { useState, useEffect } from "react";
 import { signOut } from "next-auth/react";
 
 const routes = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Dashboard", href: "/studentDashboard", icon: LayoutDashboard },
   { label: "My Classes", href: "/classes", icon: BookOpen },
   { label: "Projects", href: "/projects", icon: FolderGit2 },
   { label: "Messages", href: "/messages", icon: MessageSquare },
