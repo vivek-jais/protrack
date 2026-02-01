@@ -27,7 +27,7 @@ function LoginForm() {
       if (role === "teacher") {
         router.push("/teacherDashboard");
       } else {
-        router.push('/studentDashboard');
+        router.push('/dashboard');
       }
     }
   }, [status, session, router]);
