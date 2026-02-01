@@ -16,6 +16,7 @@ import {
   TrendingUp,
   Loader2
 } from "lucide-react";
+import { useEffect } from "react";
 
 export default function StudentDashboard() {
   const { data: session } = useSession();
@@ -59,6 +60,21 @@ export default function StudentDashboard() {
         <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
       </div>
     );
+  }
+
+export default function StudentDashboard() {
+   
+  useEffect(()=>{
+    GetAllUsers();
+  },[]);
+
+  const GetAllUsers = async()=>{
+     const res = await fetch("/api/user/", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" }
+      });
+      console.log(res);
+      
   }
 
   return (
