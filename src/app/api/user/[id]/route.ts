@@ -5,7 +5,6 @@ import connectDb from "@/lib/db";
 export default async function GET(req: Request,
   { params }: { params: Promise<{ id: string }> } // params is a Promise now
 ){
-    // const {data:session}=useSession()
     try{
         const {id}=await params
         await connectDb()

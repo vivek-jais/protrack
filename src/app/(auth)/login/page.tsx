@@ -18,11 +18,10 @@ function LoginForm() {
     }
   }, [searchParams]);
 
-  // 2. THE SIMPLE REDIRECT (No Fetching!)
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
       // @ts-ignore
-      const role = session.user.role; // <--- DIRECT ACCESS
+      const role = session.user.role; 
 
       if (role === "teacher") {
         router.push("/teacherDashboard");
@@ -32,7 +31,6 @@ function LoginForm() {
     }
   }, [status, session, router]);
 
-  // 3. Simple Login Handler
   const handleGoogleLogin = () => {
     signIn("google", { redirect: false });
   };
