@@ -1,23 +1,25 @@
 "use client";
 
-import { Menu, X,Bell, Search, Plus, Sparkles } from "lucide-react";
+import { Menu, X, Bell, Search, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { useSidebar } from "@/context/SidebarContext"; 
+import { useSidebar } from "@/context/SidebarContext";
+import { useSession } from "next-auth/react";
 
 export default function Navbar() {
-  const {toggle,isOpen} = useSidebar(); 
+  const { toggle, isOpen } = useSidebar();
+  const { data: session } = useSession()
 
   return (
     <nav className="sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b border-zinc-200 bg-white/80 px-4 backdrop-blur-xl transition-all dark:border-zinc-800 dark:bg-zinc-950/80">
       <div className="flex items-center gap-4">
-        <button 
-          onClick={toggle} 
+        <button
+          onClick={toggle}
           className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
         >
           {isOpen ? <X className="h-6 w-6 cursor-pointer" /> : <Menu className="h-6 w-6 cursor-pointer" />}
         </button>
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/20">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-tr from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/20">
             <Sparkles className="h-4 w-4 text-white" />
           </div>
           <span className="bg-linear-to-r from-zinc-800 to-zinc-600 bg-clip-text text-xl font-bold text-transparent dark:from-zinc-100 dark:to-zinc-400">
@@ -49,8 +51,12 @@ export default function Navbar() {
         </button>
 
         <button className="ml-1 h-9 w-9 overflow-hidden rounded-full ring-2 ring-transparent transition-all hover:ring-emerald-500/50">
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-sm font-bold text-white">
-            JD
+          <div className="h-10 w-10 rounded-full overflow-hidden">
+            <img
+              src={session?.user?.image || "/default-avatar.png"}
+              alt="User Profile"
+              className="h-full w-full object-cover"
+            />
           </div>
         </button>
       </div>
