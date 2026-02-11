@@ -4,10 +4,20 @@ import { Menu, X, Bell, Search, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useSidebar } from "@/context/SidebarContext";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function Navbar() {
   const { toggle, isOpen } = useSidebar();
-  const { data: session } = useSession()
+  const { data: session } = useSession();
+  const router=useRouter()
+  //@ts-ignore
+  const role=session?.user.role;
+  const onClick =()=>{
+    
+    if(role==='student')
+    router.push('/createGroup');
+    else if(role==='teacher') router.push('/createClass')
+  }
 
   return (
     <nav className="sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b border-zinc-200 bg-white/80 px-4 backdrop-blur-xl transition-all dark:border-zinc-800 dark:bg-zinc-950/80">
@@ -38,13 +48,17 @@ export default function Navbar() {
           />
         </div>
       </div>
-
+      
       <div className="flex items-center gap-2 sm:gap-3">
-        <button className="flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 shadow-sm transition-all hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800">
+        {role==='student'&&(<button onClick={onClick} className="cursor-pointer flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 shadow-sm transition-all hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800">
           <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">Create</span>
-        </button>
-
+          <span className="hidden sm:inline">Create Group</span>
+        </button>)}
+        {role==='teacher'&&(<button onClick={onClick} className="cursor-pointer flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 shadow-sm transition-all hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800">
+          <Plus className="h-4 w-4" />
+          <span className="hidden sm:inline">Create Class</span>
+        </button>)}
+        
         <button className="relative rounded-full p-2.5 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
           <Bell className="h-5 w-5" />
           <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-zinc-950"></span>

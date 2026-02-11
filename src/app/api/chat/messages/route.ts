@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOption } from "@/lib/authOption";
 import connectDb from "@/lib/db";
 import Message from "@/models/Message";
+import User from "@/models/User";
 
 export async function GET(req: Request) {
   const session = await getServerSession(authOption);
@@ -24,6 +25,10 @@ export async function GET(req: Request) {
       { sender: otherUserId, receiver: session.user.id }
     ]
   }).sort({ createdAt: 1 }); // Oldest first
+
+  // Update last active status for the current user
+  // @ts-ignore
+  await User.findByIdAndUpdate(session.user.id, { lastActive: new Date() });
 
   return NextResponse.json(messages, { status: 200 });
 }
