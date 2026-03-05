@@ -20,8 +20,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 dark:bg-zinc-900 text-gray-900 dark:text-gray-100`}>
         <SessionWrapping>
-           {/* 👇 NO NAVBAR, NO SIDEBAR HERE. Just children. */}
-           {children}
+          {children}
         </SessionWrapping>
       </body>
     </html>

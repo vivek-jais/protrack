@@ -11,23 +11,24 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const [errorMsg, setErrorMsg] = useState("");
 
-  // 1. Check for URL errors (e.g. if DB crashes)
   useEffect(() => {
     if (searchParams.get("error")) {
       setErrorMsg("Login failed. Please try again.");
     }
   }, [searchParams]);
 
-  // 2. THE SIMPLE REDIRECT (No Fetching!)
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
       // @ts-ignore
-      const role = session.user.role; // <--- DIRECT ACCESS
-
+      const role = session.user.role; 
+      //custom dashboard on the basis of rhe roles
       if (role === "teacher") {
         router.push("/teacherDashboard");
-      } else {
+      } else if(role==='student') {
         router.push('/dashboard');
+      }
+      else{
+        router.push('/onboarding')
       }
     }
   }, [status, session, router]);
@@ -66,7 +67,7 @@ function LoginForm() {
 
         <button
           onClick={handleGoogleLogin}
-          className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-200 dark:hover:bg-zinc-700 transition-all"
+          className="cursor-pointer flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-200 dark:hover:bg-zinc-700 transition-all"
         >
           {/* Google SVG Icon */}
           <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -83,7 +84,6 @@ function LoginForm() {
   );
 }
 
-// Keep Suspense because useSearchParams needs it
 export default function LoginPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
