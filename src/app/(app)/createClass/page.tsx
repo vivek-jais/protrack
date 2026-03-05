@@ -54,7 +54,7 @@ export default function CreateClassPage() {
     <div className="min-h-screen bg-gray-50 px-4 py-12 dark:bg-zinc-950">
       <div className="mx-auto max-w-2xl">
         <Link 
-          href="/dashboard/teacher" 
+          href="/teacherDashboard" 
           className="mb-6 inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-zinc-400 dark:hover:text-white"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
