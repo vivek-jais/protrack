@@ -1,11 +1,12 @@
 import User from "@/models/User";
 import { NextResponse } from "next/server";
 
+//fetch all the users for teacher
 export async function GET() {
   try {
     const allUsers = await User.find({});
     console.log(allUsers);
-
+ 
     return NextResponse.json(
       { users: allUsers },
       { status: 200 }

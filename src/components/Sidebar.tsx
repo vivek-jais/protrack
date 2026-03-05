@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useSidebar } from "@/context/SidebarContext";
 import { 
   LayoutDashboard, 
@@ -18,20 +19,22 @@ import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 import { signOut } from "next-auth/react";
 
-const routes = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "My Classes", href: "/classes", icon: BookOpen },
-  { label: "Projects", href: "/projects", icon: FolderGit2 },
-  { label: "Messages", href: "/messages", icon: MessageSquare },
-  { label: "AI Assistant", href: "/assistant", icon: Bot, isSpecial: true }, 
-  { label: "Settings", href: "/settings", icon: Settings },
-];
-
 export default function Sidebar() {
   const { isOpen } = useSidebar(); // Get the state
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const {data:session}=useSession()
+// @ts-ignore 
+const role=session?.user?.role
+const routes = [
+  { label: "Dashboard", href: role!=='teacher'?'/dashboard':'/teacherDashboard', icon: LayoutDashboard },
+  { label: "My Classes", href: "/classes", icon: BookOpen },
+  { label: "Projects", href: "/projects", icon: FolderGit2 },
+  // { label: "Messages", href: "/messages", icon: MessageSquare },
+  { label: "AI Assistant", href: "/assistant", icon: Bot, isSpecial: true }, 
+  { label: "Settings", href: "/settings", icon: Settings },
+];
 
   useEffect(() => {
     setMounted(true);
@@ -81,12 +84,12 @@ export default function Sidebar() {
           </span>
         </button>
 
-        <button 
-        onClick={() => signOut({ callbackUrl: "/login" })}
+        <Link 
+        href={'/signOut'}
         className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10">
           <LogOut className="h-5 w-5"  />
           Sign Out
-        </button>
+        </Link>
       </div>
     </aside>
   );
