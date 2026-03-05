@@ -61,13 +61,15 @@ export default function StudentDashboard() {
   useEffect(()=>{
     GetAllUsers();
   },[]);
-
+    
   const GetAllUsers = async()=>{
      const res = await fetch("/api/user/", {
         method: "GET",
         headers: { "Content-Type": "application/json" }
       });
-      console.log(res);
+     const data = await res.json();
+     console.log(data.users);
+     
       
   }
 

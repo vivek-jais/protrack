@@ -19,6 +19,8 @@ export async function POST(req: Request) {
   try {
     // 1. Check Session (Must be logged in)
     const session = await getServerSession(authOption);
+    console.log(session);
+    
     
     // @ts-ignore
     if (!session || !session.user || !session.user.id) {
