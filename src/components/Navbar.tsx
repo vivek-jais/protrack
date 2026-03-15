@@ -1,8 +1,34 @@
 "use client";
 
-import { Menu, X, Bell, Search, Plus, Sparkles } from "lucide-react";
+import { Menu, X, Bell, Search, Plus, Sparkles, Moon, Sun } from "lucide-react"; // <-- Added Moon and Sun
 import Link from "next/link";
 import { useSidebar } from "@/context/SidebarContext";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes"; // <-- Added useTheme
+import { useEffect, useState } from "react"; // <-- Added React hooks
+
+export default function Navbar() {
+  const { toggle, isOpen } = useSidebar();
+  const { data: session } = useSession();
+  const router = useRouter();
+  
+  // Theme state
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure component is mounted before rendering theme icons to avoid hydration errors
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  //@ts-ignore
+  const role = session?.user?.role;
+  
+  const onClick = () => {
+    if (role === 'student') router.push('/createGroup');
+    else if (role === 'teacher') router.push('/createClass');
+  };
 
 export default function Navbar() {
   const { toggle, isOpen } = useSidebar();
@@ -49,6 +75,32 @@ export default function Navbar() {
 
       {/* Right Section */}
       <div className="flex items-center gap-2 sm:gap-3">
+        {role === 'student' && (
+          <button onClick={onClick} className="cursor-pointer flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 shadow-sm transition-all hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800">
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Create Group</span>
+          </button>
+        )}
+        {role === 'teacher' && (
+          <button onClick={onClick} className="cursor-pointer flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 shadow-sm transition-all hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800">
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Create Class</span>
+          </button>
+        )}
+        
+        {/* Theme Toggle Button */}
+        <button
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className="relative rounded-full p-2.5 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+          aria-label="Toggle Theme"
+        >
+          {mounted && theme === "dark" ? (
+            <Sun className="h-5 w-5" />
+          ) : (
+            <Moon className="h-5 w-5" />
+          )}
+        </button>
+
 
         {/* Create Class */}
         <button className="flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 shadow-sm transition-all hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800">

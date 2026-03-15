@@ -1,46 +1,35 @@
-// import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose from "mongoose";
 
-// export interface IUpdate {
-//   content: string;
-//   createdAt: Date;
-// }
-
-// export interface IProject extends Document {
-//   student: mongoose.Types.ObjectId;
-//   classId: mongoose.Types.ObjectId;
-//   title: string;
-//   description: string;
- 
-//   status: "In Progress" | "Completed" | "Stuck";
-//   progress: number; // 0 to 100
-//   blocker?: string; // Why are they stuck?
-  
-//   documents: { name: string; url: string }[];
-//   updates: IUpdate[];
-//   createdAt: Date;
-//   updatedAt: Date;
-// }
-
-// const ProjectSchema = new Schema<IProject>(
-//   {
-//     student: { type: Schema.Types.ObjectId, ref: "User", required: true },
-//     classId: { type: Schema.Types.ObjectId, ref: "Class", required: true },
-//     title: { type: String, required: true },
-//     description: { type: String },
+const projectSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true },
+    description: { type: String, required: true },
     
-//     status: { 
-//       type: String, 
-//       enum: ["In Progress", "Completed", "Stuck"], 
-//       default: "In Progress" 
-//     },
-//     progress: { type: Number, min: 0, max: 100, default: 0 },
-//     blocker: { type: String, default: "" }, // Optional field for "Stuck" reason
+    // The subject/class this project belongs to
+    classId: { type: mongoose.Schema.Types.ObjectId, ref: "Class", required: true },
+    
+    // The teacher who created the project
+    professor: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
-//     documents: [{ name: String, url: String }],
-//     updates: [{ content: String, createdAt: { type: Date, default: Date.now } }],
-//   },
-//   { timestamps: true }
-// );
+    requirements: {
+      githubRepository: { type: Boolean, default: true },
+      liveDemoUrl: { type: Boolean, default: false },
+    },
+    referenceLinks: [
+      {
+        title: String,
+        url: String,
+      }
+    ],
+    materials: [
+      {
+        fileName: String,
+        fileUrl: String, 
+      }
+    ],
+    deadline: { type: Date, required: true },
+  },
+  { timestamps: true }
+);
 
-// const Project = (mongoose.models.Project as Model<IProject>) || mongoose.model<IProject>("Project", ProjectSchema);
-// export default Project;
+export default mongoose.models.Project || mongoose.model("Project", projectSchema);

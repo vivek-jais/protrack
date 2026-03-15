@@ -26,7 +26,7 @@ export const authOption: NextAuthOptions = {
             if (!user.email) return false;
             try {
                 await connectDb();
-                const existingUser = await User.findOne({ email: user.email });
+                const existingUser  = await User.findOne({ email: user.email });
                 if (!existingUser) {
                     await User.create({
                         name: user.name || "Anonymous User",
