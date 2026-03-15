@@ -61,11 +61,11 @@ export default function ClassDirectoryPage() {
       {/* 1. Header Section */}
       <div className="animate-in fade-in slide-in-from-top-4 duration-700">
         <Link 
-          href={`/class/${classId}`} 
+          href={`/dashboard`} 
           className="mb-6 inline-flex items-center text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Class Dashboard
+          Back to Dashboard
         </Link>
         
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between border-b border-zinc-200 pb-6 dark:border-zinc-800">
