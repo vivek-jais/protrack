@@ -30,9 +30,6 @@ export default function Navbar() {
     else if (role === 'teacher') router.push('/createClass');
   };
 
-export default function Navbar() {
-  const { toggle, isOpen } = useSidebar();
-
   return (
     <nav className="sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b border-zinc-200 bg-white/80 px-4 backdrop-blur-xl transition-all dark:border-zinc-800 dark:bg-zinc-950/80">
       
@@ -116,17 +113,13 @@ export default function Navbar() {
 
         {/* Avatar */}
         <button className="ml-1 h-9 w-9 overflow-hidden rounded-full ring-2 ring-transparent transition-all hover:ring-emerald-500/50">
-          <div className="h-10 w-10 rounded-full overflow-hidden">
-            <Link href={'/profile'}>
-             <img
+          <Link href={'/profile'}>
+            <img
               src={session?.user?.image || "/default-avatar.png"}
               alt="User Profile"
               className="h-full w-full object-cover"
-              />
-            </Link>
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-sm font-bold text-white">
-            JD
-          </div>
+            />
+          </Link>
         </button>
 
       </div>
