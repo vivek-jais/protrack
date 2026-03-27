@@ -7,8 +7,8 @@ export interface IUser extends Document {
   role: "student" | "teacher" | "pending";
   bio?: string;
   skills: string[];
-  university?: string;
-  branch?: string;
+  university: string;
+  branch: string;
   status: "occupied" | "vacant";
   semester?: number;
   socials: {
@@ -48,10 +48,12 @@ const UserSchema: Schema<IUser> = new Schema(
       default: []
     },
     university: {
-      type: String
+      type: String,
+      default:""
     },
     branch: {
-      type: String
+      type: String,
+      default:""
     },
     status: {
       type: String,
