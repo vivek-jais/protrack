@@ -57,3 +57,4 @@ const Class: Model<IClass> =
   (mongoose.models.Class as Model<IClass>) || mongoose.model<IClass>("Class", ClassSchema);
 
 export default Class;
+
