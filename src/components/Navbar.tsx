@@ -116,6 +116,14 @@ export default function Navbar() {
 
         {/* Avatar */}
         <button className="ml-1 h-9 w-9 overflow-hidden rounded-full ring-2 ring-transparent transition-all hover:ring-emerald-500/50">
+          <div className="h-10 w-10 rounded-full overflow-hidden">
+            <Link href={'/profile'}>
+             <img
+              src={session?.user?.image || "/default-avatar.png"}
+              alt="User Profile"
+              className="h-full w-full object-cover"
+              />
+            </Link>
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-sm font-bold text-white">
             JD
           </div>

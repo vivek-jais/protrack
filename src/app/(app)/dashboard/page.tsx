@@ -108,12 +108,12 @@ export default function StudentDashboard() {
     e.preventDefault();
     if (!classCode.trim()) return;
     
-    setIsSearching(true);
+    setIsSearching(true); 
     setModalError("");
     setPreviewClass(null);
 
     try {
-      const res = await fetch(`/api/class/code/${classCode.trim()}`);
+      const res = await fetch(`/api/class/${classCode.trim()}/join`);
       const data = await res.json();
 
       if (res.ok) {
