@@ -6,7 +6,7 @@ const projectSchema = new mongoose.Schema(
     description: { type: String, required: true },
     
     // The subject/class this project belongs to
-    classId: { type: mongoose.Schema.Types.ObjectId, ref: "Class"},
+    classId: { type: mongoose.Schema.Types.ObjectId, ref: "Class", required: true },
     
     // The teacher who created the project
     professor: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -21,7 +21,7 @@ const projectSchema = new mongoose.Schema(
         url: String,
       }
     ],
-    materials: [ 
+    materials: [
       {
         fileName: String,
         fileUrl: String, 
@@ -32,4 +32,4 @@ const projectSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.models.Project || mongoose.model("Project", projectSchema); 
+export default mongoose.models.Project || mongoose.model("Project", projectSchema);
