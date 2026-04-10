@@ -11,7 +11,7 @@ export default function ProfileSettingsPage() {
   // Extract 'update' to refresh the session after saving
   const { data: session, update } = useSession();
   
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); 
   const [isSaving, setIsSaving] = useState(false);
   
   const [message, setMessage] = useState({ text: "", type: "" }); // type: "success" | "error"
@@ -21,7 +21,7 @@ export default function ProfileSettingsPage() {
     image: "",
     bio: "",
     phoneNumber: "",
-    institution: "",
+    university: "",
     department: "",
   });
 
@@ -38,7 +38,7 @@ export default function ProfileSettingsPage() {
             image: data.user.image || "",
             bio: data.user.bio || "",
             phoneNumber: data.user.phoneNumber || "",
-            institution: data.user.institution || "",
+            university: data.user.university || "",
             department: data.user.department || "",
           });
         }
@@ -140,12 +140,12 @@ export default function ProfileSettingsPage() {
               </label>
               <input
                 type="url"
+                disabled
                 placeholder="https://example.com/your-image.jpg"
                 value={formData.image}
                 onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                className="w-full max-w-md rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm outline-none transition-all focus:border-blue-600 focus:ring-1 focus:ring-blue-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white"
+                className="w-full rounded-xl border border-gray-200 bg-gray-100 p-3 text-sm text-gray-500 cursor-not-allowed dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-500"
               />
-              <p className="text-xs text-gray-500 dark:text-zinc-500">Provide a direct link to an image file.</p>
             </div>
           </div>
 
@@ -207,8 +207,8 @@ export default function ProfileSettingsPage() {
               <input
                 type="text"
                 placeholder="e.g. Stanford University"
-                value={formData.institution}
-                onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
+                value={formData.university}
+                onChange={(e) => setFormData({ ...formData, university: e.target.value })}
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm outline-none transition-all focus:border-blue-600 focus:ring-1 focus:ring-blue-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white"
               />
             </div>

@@ -1,41 +1,64 @@
 import connectDb from "@/lib/db";
 import Project from "@/models/Project";
 import Class from "@/models/Class";
+import Group from "@/models/Group"; // Assuming you have a Group model
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOption } from "@/lib/authOption";
-import { executionAsyncId } from "async_hooks";
-export async function POST(req:Request){
-    try{
-        await connectDb()
-        const session=await getServerSession(authOption)
-        if(!session||!session.user){
-            return NextResponse.json({message:'Unauhtorized'},{status:400})
+
+export async function POST(req: Request) {
+    try {
+        await connectDb();
+        const session = await getServerSession(authOption);
+
+        if (!session || !session.user) {
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
-        //@ts-ignore
-        const userId=session.user.id
-        //@ts-ignore
-        if(session.user.role!=='teacher'){
-            return NextResponse.json({message:'only teachers are allowed to create peoject'},{status:401})
+
+        // @ts-ignore
+        const userId = session.user.id;
+        // @ts-ignore
+        if (session.user.role !== "teacher") {
+            return NextResponse.json({ message: "Only teachers can create projects" }, { status: 403 });
         }
-        const {title,description,classId,requirements,referenceLinks,materials,deadline}=await req.json()
+
+        const body = await req.json();
+        const { title, description, classId, deadline, startDate, stages, requirements } = body;
+
         if (!title || !description || !deadline) {
-            return NextResponse.json({ message: "Title, description, and deadline are required" }, { status: 400 });
+            return NextResponse.json({ message: "Title, description, and overall deadline are required" }, { status: 400 });
         }
+
+        // Format stages to ensure dates are properly passed
+        const formattedStages = stages.map((stage: any) => ({
+            stageName: stage.stageName,
+            maxMarks: Number(stage.maxMarks) || 10,
+            startDate: stage.startDate ? new Date(stage.startDate) : undefined,
+            deadline: stage.deadline ? new Date(stage.deadline) : undefined,
+            submissions: [] // Initialize empty submissions array
+        }));
+
+        // Create the Project
         const newProject = await Project.create({
             title,
             description,
-            classId: classId ? classId : undefined, // Leave undefined if not attached to a class
+            classId: classId || null, // Can be null if it's a standalone project
             professor: userId,
-            requirements: requirements || { githubRepository: true, liveDemoUrl: false },
-            referenceLinks: referenceLinks || [],
-            materials: materials || [],
+            startDate: startDate ? new Date(startDate) : new Date(),
             deadline: new Date(deadline),
+            requirements: requirements || { githubRepository: true, projectReport: true },
+            stages: formattedStages,
+            status: "ongoing"
         });
-        return NextResponse.json({message:'project created',project:newProject},{status:201})
-    }        
-    catch(error){
-        return NextResponse.json({error:'error'},{status:501})
+
+        // Trigger the pre-save hook by manually saving once (calculates total marks)
+        await newProject.save();
+
+        return NextResponse.json({ message: "Project created successfully!", project: newProject }, { status: 201 });
+
+    } catch (error) {
+        console.error("Create Project Error:", error);
+        return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
     }
 }
 
@@ -43,7 +66,7 @@ export async function GET(req: Request) {
     try {
         await connectDb();
         const session = await getServerSession(authOption);
-
+        
         if (!session || !session.user) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
@@ -56,22 +79,34 @@ export async function GET(req: Request) {
         let projects = [];
 
         if (role === "teacher") {
+            // Teachers just see the projects they created
             projects = await Project.find({ professor: userId })
                 .populate("classId", "name code")
                 .sort({ createdAt: -1 });
-        } else if (role === "student") {
-            const studentClasses = await Class.find({ students: userId }).select("_id");
-            const classIds = studentClasses.map(c => c._id);
+        } 
+        else if (role === "student") {
+            // 1. Find all classes the student is enrolled in
+            const enrolledClasses = await Class.find({ students: userId }).select("_id");
+            const classIds = enrolledClasses.map(c => c._id);
 
-            projects = await Project.find({ classId: { $in: classIds } })
-                .populate("classId", "name code")
-                .populate("professor", "name")
-                .sort({ deadline: 1 });
+            // 2. Fetch projects assigned to their classes OR standalone projects
+            // Notice: No Group logic here at all!
+            projects = await Project.find({
+                $or: [
+                    { classId: { $in: classIds } },
+                    { classId: null },
+                    { classId: { $exists: false } }
+                ]
+            })
+            .populate("classId", "name code")
+            .populate("professor", "name")
+            .sort({ deadline: 1 });
         }
 
-        return NextResponse.json({ projects }, { status: 200 })
-    }
-    catch(error){
-        return NextResponse.json({error:'error'},{status:501})
+        return NextResponse.json({ projects }, { status: 200 });
+
+    } catch (error) {
+        console.error("Fetch Projects Error:", error);
+        return NextResponse.json({ message: "Server error" }, { status: 500 });
     }
 }

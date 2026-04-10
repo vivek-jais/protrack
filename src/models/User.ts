@@ -8,6 +8,7 @@ export interface IUser extends Document {
   bio?: string;
   skills: string[];
   university: string;
+  phoneNumber:number;
   branch: string;
   status: "occupied" | "vacant";
   semester?: number;
@@ -34,6 +35,9 @@ const UserSchema: Schema<IUser> = new Schema(
     },
     image: {
       type: String
+    },
+    phoneNumber:{
+      type:Number,
     },
     role: {
       type: String,
