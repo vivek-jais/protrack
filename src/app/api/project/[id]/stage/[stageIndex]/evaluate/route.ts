@@ -30,19 +30,24 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
         if (!submission) return NextResponse.json({ message: "No submission found to grade." }, { status: 404 });
 
-        // Save the evaluation data
+        // Save the evaluation data in memory
         submission.evaluation = {
             evaluatedBy: teacherId,
             marksAwarded: Number(marksAwarded),
-            feedback: feedback || "",
+            feedback: feedback || "No remarks provided.",
             evaluatedAt: new Date()
         };
         submission.status = "evaluated";
 
+        // 🔥 THE MAGIC FIX 🔥
+        // Explicitly tell Mongoose that a deeply nested array has been modified!
+        project.markModified("stages");
+
+        // Now when we save, it will actually push the changes to MongoDB
         await project.save();
 
         return NextResponse.json({ message: "Grade saved successfully!", project }, { status: 200 });
-
+ 
     } catch (error) {
         console.error("Evaluation Error:", error);
         return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });

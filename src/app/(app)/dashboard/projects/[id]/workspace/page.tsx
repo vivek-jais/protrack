@@ -166,7 +166,7 @@ export default function ProjectWorkspacePage() {
               <Lock className="h-12 w-12 text-gray-300 dark:text-zinc-700 mb-4" />
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Workspace Locked</h3>
               <p className="text-sm text-gray-500 mt-2">You must form or join a team before you can upload submissions.</p>
-              <button onClick={() => router.push('/dashboard/createGroup')} className="mt-6 px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700">Form a Team</button>
+              <button onClick={() => router.push('/createGroup')} className="mt-6 px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700">Form a Team</button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -270,7 +270,7 @@ export default function ProjectWorkspacePage() {
                       
                       /* STATUS MESSAGES FOR NON-LEADERS OR CLOSED STAGES */
                       !isLeader && status === 'live' ? (
-                        <p className="text-xs text-amber-600 font-medium bg-amber-50 p-3 rounded-lg dark:bg-amber-900/10 dark:text-amber-400">Waiting for Team Leader to upload.</p>
+                        <p className="text-xs text-amber-600 font-medium bg-amber-50 p-3 rounded-lg dark:bg-amber-900/10 dark:text-amber-400">Only Team Leader could upload the documents</p>
                       ) : status === 'closed' ? (
                         <p className="text-xs text-rose-500 font-medium bg-rose-50 p-3 rounded-lg dark:bg-rose-900/10 dark:text-rose-400 text-center">Submission window has closed.</p>
                       ) : status === 'upcoming' ? (
