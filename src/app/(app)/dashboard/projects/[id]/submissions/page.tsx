@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ToastContainer, toast } from "react-toastify";
 import { 
-  Loader2, FileText, CheckCircle2, Clock, FolderDot, ExternalLink, ArrowLeft, Calendar, Target, Lock
+  Loader2, FileText, CheckCircle2, Clock, FolderDot, ExternalLink, ArrowLeft, Calendar, Target, Lock, MessageSquare
 } from "lucide-react";
 import Link from "next/link";
 
@@ -23,7 +23,7 @@ export default function ProjectSubmissionsTab() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1. Fetch Project Details (for the header)
+        // 1. Fetch Project Details
         const projRes = await fetch(`/api/project/${projectId}`);
         if (projRes.ok) {
           const projData = await projRes.json();
@@ -37,12 +37,15 @@ export default function ProjectSubmissionsTab() {
           setMyGroup(groupData.group);
         }
 
-        // 3. Fetch from your DEDICATED Submissions API
+        // 3. Fetch from global /api/submissions
         const subRes = await fetch('/api/submissions');
         if (subRes.ok) {
           const subData = await subRes.json();
-          // Filter the global submissions to only show ones for THIS project
-          const filteredSubs = subData.submissions.filter((sub: any) => sub.projectId === projectId);
+          
+          // 🔥 BUG FIX: Force both IDs to be strings so they match perfectly
+          const filteredSubs = subData.submissions.filter((sub: any) => 
+            String(sub.projectId) === String(projectId)
+          );
           setProjectSubmissions(filteredSubs);
         }
         
@@ -64,9 +67,9 @@ export default function ProjectSubmissionsTab() {
   };
 
   if (isLoading) {
-    return <div className="flex h-screen items-center justify-center bg-zinc-950"><Loader2 className="animate-spin text-emerald-500 h-8 w-8" /></div>;
+    return <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-gray-50 dark:bg-zinc-950"><Loader2 className="animate-spin text-emerald-500 h-8 w-8" /></div>;
   }
-  if (!project) return <div className="p-8 text-center text-white bg-zinc-950 min-h-screen">Project not found.</div>;
+  if (!project) return <div className="p-8 text-center text-gray-500 dark:text-zinc-400 min-h-screen">Project not found.</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 dark:bg-zinc-950">
@@ -75,7 +78,7 @@ export default function ProjectSubmissionsTab() {
       {/* 🚀 HEADER & TABS */}
       <div className="bg-white border-b border-gray-200 dark:bg-zinc-900 dark:border-zinc-800 py-6">
         <div className="max-w-7xl mx-auto px-4">
-          <Link href="/dashboard/projects" className="flex items-center text-sm font-medium text-gray-500 hover:text-emerald-600 mb-4 dark:text-zinc-400">
+          <Link href="/projects" className="flex items-center text-sm font-medium text-gray-500 hover:text-emerald-600 mb-4 dark:text-zinc-400 transition-colors">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Projects
           </Link>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -111,7 +114,7 @@ export default function ProjectSubmissionsTab() {
                 >
                   Workspace
                 </Link>
-                <div className="px-6 py-2.5 text-sm font-bold rounded-lg transition-all bg-white text-emerald-600 shadow-sm dark:bg-zinc-950 dark:text-white cursor-default">
+                <div className="px-6 py-2.5 text-sm font-bold rounded-lg transition-all bg-white text-emerald-600 shadow-sm dark:bg-zinc-950 dark:text-emerald-400 cursor-default">
                   My Submissions
                 </div>
               </div>
@@ -126,7 +129,7 @@ export default function ProjectSubmissionsTab() {
         <div className="mb-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Submission History</h2>
           <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1">
-            All files uploaded by your team for this project.
+            All files uploaded by your team for this project, along with teacher remarks.
           </p>
         </div>
 
@@ -142,7 +145,7 @@ export default function ProjectSubmissionsTab() {
               <FolderDot className="h-10 w-10 text-gray-400 dark:text-zinc-500" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">No Submissions Yet</h3>
-            <p className="text-sm text-gray-500 mt-2 max-w-sm leading-relaxed">
+            <p className="text-sm text-gray-500 mt-2 max-w-sm leading-relaxed dark:text-zinc-400">
               Your team hasn't uploaded any files for this project yet. Go to the Workspace tab to submit your work.
             </p>
           </div>
@@ -152,71 +155,95 @@ export default function ProjectSubmissionsTab() {
               <table className="w-full text-left border-collapse">
                 <thead className="bg-gray-50/80 border-b border-gray-100 dark:bg-zinc-950/50 dark:border-zinc-800">
                   <tr>
-                    <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-zinc-400">Stage</th>
-                    <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-zinc-400">Uploaded Files</th>
+                    <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-zinc-400 w-1/4">Stage</th>
+                    <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-zinc-400 w-2/5">Uploaded Files & Feedback</th>
                     <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-zinc-400">Submitted On</th>
                     <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-zinc-400 text-right">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-zinc-800">
-                  {projectSubmissions.map((sub, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50/50 transition-colors dark:hover:bg-zinc-950/30 group">
-                      
-                      {/* Stage Info */}
-                      <td className="px-6 py-5 align-top">
-                        <span className="font-bold text-base text-gray-900 dark:text-white block">
-                          Stage {sub.stageIndex}
-                        </span>
-                        <span className="text-xs font-medium text-gray-500 dark:text-zinc-400 mt-1 block">
-                          {sub.stageName}
-                        </span>
-                      </td>
+                  {projectSubmissions.map((sub, idx) => {
+                    
+                    // We fetch the exact submission from the project object to ensure we have the feedback
+                    const stageData = project.stages[sub.stageIndex - 1];
+                    const exactSubmission = stageData?.submissions?.find((s:any) => String(s.groupId) === String(myGroup._id));
 
-                      {/* File Chips */}
-                      <td className="px-6 py-5 align-top">
-                        <div className="flex flex-wrap gap-2">
-                          {sub.documents?.map((doc: any, dIdx: number) => (
-                            <a 
-                              key={dIdx}
-                              href={doc.fileUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 hover:border-emerald-200 transition-all dark:bg-emerald-900/10 dark:text-emerald-400 dark:border-emerald-900/30 dark:hover:bg-emerald-900/20 w-max"
-                            >
-                              <FileText className="h-4 w-4 shrink-0 opacity-80" />
-                              <span className="truncate max-w-[200px] text-xs font-bold">{doc.fileName}</span>
-                              <ExternalLink className="h-3 w-3 opacity-50 shrink-0" />
-                            </a>
-                          ))}
-                        </div>
-                      </td>
-
-                      {/* Date */}
-                      <td className="px-6 py-5 align-top">
-                        <div className="flex items-center gap-1.5 text-gray-600 dark:text-zinc-400 text-sm font-medium mt-1">
-                          <Clock className="h-4 w-4 text-gray-400 dark:text-zinc-500" /> 
-                          {formatDate(sub.submittedAt)}
-                        </div>
-                      </td>
-
-                      {/* Status */}
-                      <td className="px-6 py-5 align-top text-right">
-                        {sub.status === 'evaluated' ? (
-                          <div className="flex flex-col items-end gap-1.5">
-                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg dark:bg-emerald-900/20 dark:border-emerald-900/30 dark:text-emerald-400">
-                              <CheckCircle2 className="h-4 w-4" /> Evaluated
-                            </span>
-                            <span className="text-xs font-bold text-gray-500 dark:text-zinc-400">Score: <span className="text-gray-900 dark:text-white">{sub.marksAwarded}</span>/{sub.maxMarks}</span>
-                          </div>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-lg dark:bg-emerald-900/20 dark:border-emerald-900/30 dark:text-emerald-400">
-                            Submitted Pending
+                    return (
+                      <tr key={idx} className="hover:bg-gray-50/50 transition-colors dark:hover:bg-zinc-950/30 group">
+                        
+                        {/* Stage Info */}
+                        <td className="px-6 py-5 align-top">
+                          <span className="font-bold text-base text-gray-900 dark:text-white block">
+                            Stage {sub.stageIndex}
                           </span>
-                        )}
-                      </td>
+                          <span className="text-xs font-medium text-gray-500 dark:text-zinc-400 mt-1 block">
+                            {sub.stageName}
+                          </span>
+                        </td>
 
-                    </tr>
-                  ))}
+                        {/* File Chips & Feedback */}
+                        <td className="px-6 py-5 align-top">
+                          <div className="flex flex-col gap-4">
+                            
+                            {/* Files */}
+                            <div className="flex flex-wrap gap-2">
+                              {sub.documents?.map((doc: any, dIdx: number) => (
+                                <a 
+                                  key={dIdx}
+                                  href={doc.fileUrl} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 hover:border-emerald-200 transition-all dark:bg-emerald-900/10 dark:text-emerald-400 dark:border-emerald-900/30 dark:hover:bg-emerald-900/20 w-max"
+                                >
+                                  <FileText className="h-4 w-4 shrink-0 opacity-80" />
+                                  <span className="truncate max-w-[200px] text-xs font-bold">{doc.fileName}</span>
+                                  <ExternalLink className="h-3 w-3 opacity-50 shrink-0" />
+                                </a>
+                              ))}
+                            </div>
+
+                            {/* 🔥 TEACHER FEEDBACK VISIBLE TO STUDENTS */}
+                            {sub.status === 'evaluated' && exactSubmission?.evaluation?.feedback && (
+                              <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-xl dark:bg-emerald-900/10 dark:border-emerald-900/20">
+                                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-2 flex items-center gap-1.5 dark:text-emerald-500">
+                                  <MessageSquare className="h-3 w-3" /> Teacher Remarks
+                                </p>
+                                <p className="text-sm text-emerald-900 dark:text-emerald-100 leading-relaxed">
+                                  "{exactSubmission.evaluation.feedback}"
+                                </p>
+                              </div>
+                            )}
+
+                          </div>
+                        </td>
+
+                        {/* Date */}
+                        <td className="px-6 py-5 align-top">
+                          <div className="flex items-center gap-1.5 text-gray-600 dark:text-zinc-400 text-sm font-medium mt-1">
+                            <Clock className="h-4 w-4 text-gray-400 dark:text-zinc-500" /> 
+                            {formatDate(sub.submittedAt)}
+                          </div>
+                        </td>
+
+                        {/* Status */}
+                        <td className="px-6 py-5 align-top text-right">
+                          {sub.status === 'evaluated' ? (
+                            <div className="flex flex-col items-end gap-1.5">
+                              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg dark:bg-emerald-900/20 dark:border-emerald-900/30 dark:text-emerald-400">
+                                <CheckCircle2 className="h-4 w-4" /> Evaluated
+                              </span>
+                              <span className="text-xs font-bold text-gray-500 dark:text-zinc-400">Score: <span className="text-gray-900 dark:text-white">{sub.marksAwarded || exactSubmission?.evaluation?.marksAwarded}</span>/{sub.maxMarks || stageData?.maxMarks}</span>
+                            </div>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-lg dark:bg-emerald-900/20 dark:border-emerald-900/30 dark:text-emerald-400">
+                              Submitted Pending
+                            </span>
+                          )}
+                        </td>
+
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

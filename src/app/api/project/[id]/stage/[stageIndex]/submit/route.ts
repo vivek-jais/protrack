@@ -43,10 +43,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         }
         
         const stage = project.stages[index];
-
-        // ==========================================
-        // 💾 REAL LOCAL FILE UPLOAD LOGIC
-        // ==========================================
         
         // 1. Convert the uploaded file into a readable Buffer
         const bytes = await file.arrayBuffer();

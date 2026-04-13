@@ -1,223 +1,294 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2, Sparkles, Send, Save, Plus, Trash2,Upload } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
-import { 
-  Loader2, Plus, Trash2, Calendar, Target, 
-  FileText, School, AlignLeft, Send
-} from "lucide-react";
-import Link from "next/link";
 
-export default function CreateProjectPage() {
-  const { data: session } = useSession();
+// Default empty state for manual entry
+const EMPTY_PROJECT = {
+  title: "",
+  description: "",
+  startDate: "",
+  deadline: "",
+  totalMarks: 0,
+  github_repository: true,
+  stages: []
+};
+
+export default function HybridProjectBuilder() {
   const router = useRouter();
 
-  // Basic Details
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [classId, setClassId] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [deadline, setDeadline] = useState("");
-  
-  // Stages (Roadmap)
-  const [stages, setStages] = useState([
-    { stageName: "Phase 1: Planning", maxMarks: 10, startDate: "", deadline: "" }
-  ]);
+  // Chat State
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [threadId] = useState(`teacher_${Date.now()}`);
 
-  // Data
-  const [myClasses, setMyClasses] = useState<any[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Form State (Editable by AI and Human)
+  const [formData, setFormData] = useState<any>(EMPTY_PROJECT);
 
-  // Fetch classes the teacher owns
-  useEffect(() => {
-    const fetchClasses = async () => {
-      try {
-        // @ts-ignore
-        const res = await fetch(`/api/user/classes/${session?.user?.id}`);
-        if (res.ok) {
-          const data = await res.json();
-          setMyClasses(data.classes);
-        }
-      } catch (error) {
-        console.error("Failed to fetch classes");
-      }
-    };
-    if (session) fetchClasses();
-  }, [session]);
+  // ==========================================
+  // AI INTERACTION LOGIC
+  // ==========================================
+  const handleAIStep = async () => {
+    if (!input) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`http://localhost:8000/api/builder/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // Send the chat text AND the current manual form state to sync them
+        body: JSON.stringify({ thread_id: threadId, text: input, current_draft: formData }),
+      });
 
-  // Stage Handlers
+      const data = await res.json();
+      
+      // Auto-fill the manual form with AI's response
+      if (data.draft) setFormData(data.draft);
+      
+    } catch (err) {
+      toast.error("AI Server unreachable. Ensure Python backend is running.");
+    } finally {
+      setLoading(false);
+      setInput("");
+    }
+  };
+
+  // ==========================================
+  // MANUAL FORM LOGIC
+  // ==========================================
+  const handleInputChange = (field: string, value: any) => {
+    setFormData((prev: any) => ({ ...prev, [field]: value }));
+  };
+
+  const handleStageChange = (index: number, field: string, value: any) => {
+    const newStages = [...(formData.stages || [])];
+    newStages[index] = { ...newStages[index], [field]: value };
+    setFormData((prev: any) => ({ ...prev, stages: newStages }));
+  };
+
   const addStage = () => {
-    setStages([...stages, { stageName: `Phase ${stages.length + 1}`, maxMarks: 10, startDate: "", deadline: "" }]);
+    setFormData((prev: any) => ({
+      ...prev,
+      stages: [...(prev.stages || []), { stageName: "", deadline: "", maxMarks: 0 }]
+    }));
   };
 
   const removeStage = (index: number) => {
-    setStages(stages.filter((_, i) => i !== index));
+    const newStages = [...(formData.stages || [])];
+    newStages.splice(index, 1);
+    setFormData((prev: any) => ({ ...prev, stages: newStages }));
   };
 
-  const updateStage = (index: number, field: string, value: string | number) => {
-    const updated = [...stages];
-    updated[index] = { ...updated[index], [field]: value };
-    setStages(updated);
-  };
-
-  // Submit Form
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (stages.length === 0) return toast.error("You must add at least one stage.");
-
-    setIsSubmitting(true);
+  const saveToDatabase = async () => {
     try {
-      const payload = {
-        title,
-        description,
-        classId: classId || undefined,
-        startDate,
-        deadline,
-        stages
-      };
-
-      const res = await fetch("/api/project", { // Update this URL if your route is different
+      // Send the finalized JSON to your Next.js API
+      const res = await fetch("/api/project", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(formData),
       });
-
+      
       if (res.ok) {
-        const data = await res.json();
-        toast.success("Project created successfully!");
-        setTimeout(() => {
-          router.push(`/dashboard/projects/${data.project._id}`);
-        }, 1500);
+        toast.success("Project saved successfully!");
+        // 🔥 Redirect back to projects library immediately
+        router.push("/projects"); 
       } else {
-        const data = await res.json();
-        toast.error(data.message || "Failed to create project");
+        toast.error("Error saving project.");
       }
     } catch (error) {
-      toast.error("An error occurred");
-    } finally {
-      setIsSubmitting(false);
+      toast.error("Network error.");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 dark:bg-zinc-950 p-4 md:p-8">
-      <ToastContainer />
+    <div className="min-h-screen bg-[#09090b] text-white pb-20 font-sans">
+      <ToastContainer theme="dark" />
       
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">Create New Assignment</h1>
-          <p className="mt-2 text-sm text-gray-500 dark:text-zinc-400">Design a roadmap-style project for your students.</p>
-        </div>
+      {/* HEADER */}
+      <div className="py-10 px-8 max-w-[95%] mx-auto">
+        <h1 className="text-3xl font-extrabold text-white">
+          Project Creation Studio
+        </h1>
+        <p className="mt-2 text-sm text-zinc-400">
+          Build your project manually, or use the AI Architect to auto-generate the curriculum.
+        </p>
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          
-          {/* Section 1: Basic Info */}
-          <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-200 shadow-sm dark:bg-zinc-900 dark:border-zinc-800 space-y-6">
-            <h2 className="text-lg font-bold flex items-center gap-2 text-gray-900 dark:text-white border-b border-gray-100 dark:border-zinc-800 pb-4">
-              <FileText className="h-5 w-5 text-blue-500" /> Core Details
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-semibold text-gray-700 dark:text-zinc-300">Project Title</label>
-                <input type="text" required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Full Stack E-Commerce App" className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white" />
+      <div className="max-w-[95%] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* LEFT COLUMN: AI ASSISTANT (4/12 width) */}
+        <div className="lg:col-span-4">
+          <div className="bg-[#18181b] rounded-2xl p-6 flex flex-col sticky top-8 shadow-md">
+            
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-10 w-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-sm">
+                <Sparkles className="text-white h-5 w-5" />
               </div>
+              <h2 className="text-xl font-bold text-white">AI Architect</h2>
+            </div>
 
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-semibold text-gray-700 dark:text-zinc-300">Description & Instructions</label>
-                <textarea required value={description} onChange={(e) => setDescription(e.target.value)} rows={4} placeholder="Describe the overarching goal of this project..." className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white resize-none" />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700 dark:text-zinc-300">Assign to Class (Optional)</label>
-                <div className="relative">
-                  <School className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <select value={classId} onChange={(e) => setClassId(e.target.value)} className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 pl-10 pr-4 py-2.5 text-sm outline-none focus:border-blue-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white">
-                    <option value="">-- Select a Class --</option>
-                    {myClasses.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-blue-600 dark:text-blue-400">Project Start Date</label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-blue-400" />
-                  <input type="datetime-local" required value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full rounded-xl border border-blue-200 bg-blue-50/50 pl-10 pr-4 py-2.5 text-sm outline-none focus:border-blue-600 dark:border-blue-900/50 dark:bg-blue-900/10 dark:text-white" />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700 dark:text-zinc-300">Final Project Deadline</label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <input type="datetime-local" required value={deadline} onChange={(e) => setDeadline(e.target.value)} className="w-full rounded-xl border border-gray-200 bg-gray-50 pl-10 pr-4 py-2.5 text-sm outline-none focus:border-blue-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white" />
-                </div>
-              </div>
+            <div className="relative mt-4">
+              <textarea 
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask AI to generate or modify stages..."
+                className="w-full bg-[#09090b] border border-zinc-800 rounded-xl p-4 pr-12 text-sm focus:outline-none focus:border-emerald-500 text-white resize-none shadow-inner"
+                rows={5}
+              />
+              <button 
+                onClick={handleAIStep}
+                disabled={loading || !input}
+                className="cursor-pointer absolute bottom-4 right-4 p-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 disabled:opacity-50 transition-colors"
+              >
+                {loading ? <Loader2 className="animate-spin h-4 w-4" /> : <Send className="h-4 w-4 -ml-0.5 mt-0.5" />}
+              </button>
             </div>
           </div>
+        </div>
 
-          {/* Section 2: Roadmap Stages */}
-          <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-200 shadow-sm dark:bg-zinc-900 dark:border-zinc-800 space-y-6">
-            <div className="flex items-center justify-between border-b border-gray-100 dark:border-zinc-800 pb-4">
-              <h2 className="text-lg font-bold flex items-center gap-2 text-gray-900 dark:text-white">
-                <Target className="h-5 w-5 text-emerald-500" /> Roadmap Stages
-              </h2>
-              <button type="button" onClick={addStage} className="text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 dark:text-blue-400">
-                <Plus className="h-4 w-4" /> Add Stage
+        {/* RIGHT COLUMN: MANUAL EDITABLE FORM (8/12 width) */}
+        <div className="lg:col-span-8">
+          <div className="bg-[#18181b] rounded-2xl p-8 shadow-md">
+            
+            <div className="flex justify-between items-center mb-8 pb-6 border-b border-zinc-800">
+              <h2 className="text-sm font-bold text-white uppercase tracking-widest">Project Specification</h2>
+              <button 
+                onClick={saveToDatabase}
+                className="cursor-pointer px-5 py-2.5 bg-white text-black rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-gray-200 transition-colors"
+              >
+                <Upload className="h-4 w-4" /> Upload Project
               </button>
             </div>
 
-            <div className="space-y-4">
-              {stages.map((stage, index) => (
-                <div key={index} className="p-5 rounded-xl border border-gray-200 bg-gray-50 dark:bg-zinc-950/50 dark:border-zinc-800 relative group transition-all hover:border-blue-300 dark:hover:border-blue-900/50">
-                  
-                  <div className="absolute -left-3 -top-3 h-6 w-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-sm">
-                    {index + 1}
-                  </div>
-
-                  {stages.length > 1 && (
-                    <button type="button" onClick={() => removeStage(index)} className="absolute right-4 top-4 text-gray-400 hover:text-rose-500 transition-colors">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )}
-
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mt-2">
-                    
-                    <div className="md:col-span-8 space-y-1">
-                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-zinc-400">Stage Name</label>
-                      <input type="text" required value={stage.stageName} onChange={(e) => updateStage(index, 'stageName', e.target.value)} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-600 dark:bg-zinc-900 dark:border-zinc-700 dark:text-white" />
-                    </div>
-
-                    <div className="md:col-span-4 space-y-1">
-                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-zinc-400">Points / Marks</label>
-                      <input type="number" required min="1" value={stage.maxMarks} onChange={(e) => updateStage(index, 'maxMarks', e.target.value)} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-600 dark:bg-zinc-900 dark:border-zinc-700 dark:text-white" />
-                    </div>
-
-                    {/* 🔥 NEW: Start Date and End Date side-by-side */}
-                    <div className="md:col-span-6 space-y-1">
-                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-zinc-400 text-blue-600 dark:text-blue-400">Go-Live Date (Start)</label>
-                      <input type="datetime-local" value={stage.startDate} onChange={(e) => updateStage(index, 'startDate', e.target.value)} className="w-full rounded-lg border border-blue-200 bg-blue-50/50 px-3 py-2 text-sm outline-none focus:border-blue-600 dark:bg-blue-900/10 dark:border-blue-900/50 dark:text-white" />
-                    </div>
-
-                    <div className="md:col-span-6 space-y-1">
-                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-zinc-400 text-rose-600 dark:text-rose-400">Deadline (End)</label>
-                      <input type="datetime-local" required value={stage.deadline} onChange={(e) => updateStage(index, 'deadline', e.target.value)} className="w-full rounded-lg border border-rose-200 bg-rose-50/50 px-3 py-2 text-sm outline-none focus:border-rose-600 dark:bg-rose-900/10 dark:border-rose-900/50 dark:text-white" />
-                    </div>
-
-                  </div>
+            <div className="space-y-6">
+              {/* Row 1: Title & Total Marks */}
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="flex-grow">
+                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Project Title</label>
+                  <input 
+                    type="text" 
+                    value={formData.title} 
+                    onChange={(e) => handleInputChange("title", e.target.value)}
+                    className="w-full px-4 py-3 bg-[#09090b] border border-zinc-800 rounded-xl text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                  />
                 </div>
-              ))}
+                <div className="w-full md:w-48">
+                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Total Marks</label>
+                  <input 
+                    type="number" 
+                    value={formData.totalMarks} 
+                    onChange={(e) => handleInputChange("totalMarks", Number(e.target.value))}
+                    className="w-full px-4 py-3 bg-[#09090b] border border-zinc-800 rounded-xl text-white focus:outline-none focus:border-emerald-500 transition-colors font-bold"
+                  />
+                </div>
+              </div>
+
+              {/* Row 2: Dates */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Start Date</label>
+                  <input 
+                    type="date" 
+                    value={formData.startDate} 
+                    onChange={(e) => handleInputChange("startDate", e.target.value)}
+                    className="w-full px-4 py-3 bg-[#09090b] border border-zinc-800 rounded-xl text-zinc-300 focus:outline-none focus:border-emerald-500 transition-colors"
+                    style={{ colorScheme: "dark" }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Overall Deadline</label>
+                  <input 
+                    type="date" 
+                    value={formData.deadline} 
+                    onChange={(e) => handleInputChange("deadline", e.target.value)}
+                    className="w-full px-4 py-3 bg-[#09090b] border border-zinc-800 rounded-xl text-zinc-300 focus:outline-none focus:border-emerald-500 transition-colors"
+                    style={{ colorScheme: "dark" }}
+                  />
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Description</label>
+                <textarea 
+                  value={formData.description} 
+                  onChange={(e) => handleInputChange("description", e.target.value)}
+                  className="w-full px-4 py-3 bg-[#09090b] border border-zinc-800 rounded-xl text-zinc-300 focus:outline-none focus:border-emerald-500 transition-colors h-32 resize-none leading-relaxed"
+                />
+              </div>
+
+              {/* GitHub Toggle */}
+              <div className="flex items-center gap-4 p-5 bg-[#09090b] border border-zinc-800 rounded-xl">
+                <input 
+                  type="checkbox" 
+                  checked={formData.github_repository}
+                  onChange={(e) => handleInputChange("github_repository", e.target.checked)}
+                  className="h-5 w-5 accent-emerald-500 rounded bg-zinc-900 border-zinc-700 cursor-pointer"
+                />
+                <div>
+                  <p className="text-sm font-bold text-white">Require GitHub Repository</p>
+                  <p className="text-xs text-zinc-500 mt-0.5">Teams must link a repository to this project.</p>
+                </div>
+              </div>
+
+              {/* Stages Editor */}
+              <div className="pt-8 mt-8 border-t border-zinc-800">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-sm font-bold text-white uppercase tracking-widest">Project Stages</h3>
+                  <button onClick={addStage} className="text-xs font-bold text-emerald-500 flex items-center gap-1 hover:text-emerald-400 transition-colors">
+                    <Plus className="h-4 w-4" /> Add Stage Manually
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {formData.stages?.map((stage: any, idx: number) => (
+                    <div key={idx} className="flex flex-col md:flex-row gap-4 p-5 bg-[#09090b] border border-zinc-800 rounded-xl items-start md:items-center">
+                      <div className="flex-1 w-full">
+                        <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5">Stage Name</label>
+                        <input 
+                          type="text" 
+                          value={stage.stageName} 
+                          onChange={(e) => handleStageChange(idx, "stageName", e.target.value)}
+                          className="w-full bg-transparent border-b border-zinc-700 text-sm py-1.5 focus:outline-none focus:border-emerald-500 text-white transition-colors"
+                        />
+                      </div>
+                      <div className="w-full md:w-40">
+                        <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5">Deadline</label>
+                        <input 
+                          type="date" 
+                          value={stage.deadline} 
+                          onChange={(e) => handleStageChange(idx, "deadline", e.target.value)}
+                          className="w-full bg-transparent border-b border-zinc-700 text-sm py-1.5 focus:outline-none focus:border-emerald-500 text-zinc-300 transition-colors"
+                          style={{ colorScheme: "dark" }}
+                        />
+                      </div>
+                      <div className="w-full md:w-24">
+                        <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5">Max Marks</label>
+                        <input 
+                          type="number" 
+                          value={stage.maxMarks} 
+                          onChange={(e) => handleStageChange(idx, "maxMarks", Number(e.target.value))}
+                          className="w-full bg-transparent border-b border-zinc-700 text-sm py-1.5 focus:outline-none focus:border-emerald-500 text-white font-bold transition-colors"
+                        />
+                      </div>
+                      <button onClick={() => removeStage(idx)} className="mt-4 md:mt-0 p-2 text-zinc-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all self-end">
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </div>
+                  ))}
+                  {(!formData.stages || formData.stages.length === 0) && (
+                    <div className="text-center py-10 border-2 border-dashed border-zinc-800 rounded-xl text-zinc-500 text-sm">
+                      No stages defined. Ask the AI to generate some, or add them manually!
+                    </div>
+                  )}
+                </div>
+              </div>
+
             </div>
           </div>
-
-          <button type="submit" disabled={isSubmitting} className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20">
-            {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Send className="h-5 w-5" /> Publish Assignment Roadmap</>}
-          </button>
-
-        </form>
+        </div>
+        
       </div>
     </div>
   );

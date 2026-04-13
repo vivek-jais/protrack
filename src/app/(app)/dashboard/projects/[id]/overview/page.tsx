@@ -148,7 +148,7 @@ export default function ProjectOverviewPage() {
                                     You need to form a group for this project to unlock the workspace and start submitting milestones.
                                 </p>
                                 <button
-                                    onClick={() => router.push('/dashboard/createGroup')}
+                                    onClick={() => router.push('/createGroup')}
                                     className="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-bold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
                                 >
                                     Go to Team Builder <ArrowRight className="h-4 w-4" />
