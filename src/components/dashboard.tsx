@@ -12,6 +12,7 @@ import {
   Quote,
   Mail
 } from "lucide-react";
+import BlinkingDot from './BlinkingDot';
 
 function DashboardPage() {
   const { data: session, status } = useSession();
@@ -91,7 +92,7 @@ function DashboardPage() {
         
         <div className="relative z-10 max-w-4xl space-y-6">
           <div className="mx-auto inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-4 py-1.5 text-xs font-semibold text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 md:text-sm">
-            <span className="mr-2 flex h-2 w-2 rounded-full bg-emerald-500"></span>
+            <BlinkingDot/>
             The Standard for Academic Management
           </div>
           
