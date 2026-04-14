@@ -2,36 +2,53 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useSidebar } from "@/context/SidebarContext";
 import { 
   LayoutDashboard, 
   BookOpen, 
   FolderGit2, 
-  MessageSquare, 
   Bot, 
   Settings, 
   Moon, 
   Sun,
-  LogOut
+  LogOut,
+  FileText,     
+  PlusCircle    
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 import { signOut } from "next-auth/react";
 
-const routes = [
-  { label: "Dashboard", href: "/studentDashboard", icon: LayoutDashboard },
-  { label: "My Classes", href: "/classes", icon: BookOpen },
-  { label: "Projects", href: "/projects", icon: FolderGit2 },
-  { label: "Messages", href: "/messages", icon: MessageSquare },
-  { label: "AI Assistant", href: "/assistant", icon: Bot, isSpecial: true }, 
-  { label: "Settings", href: "/settings", icon: Settings },
-];
-
 export default function Sidebar() {
-  const { isOpen } = useSidebar(); // Get the state
+  const { isOpen } = useSidebar(); 
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const { data: session } = useSession();
+
+  // @ts-ignore 
+  const role = session?.user?.role || "student"; 
+
+  const studentRoutes = [
+    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { label: "My Classes", href: "/dashboard/classes", icon: BookOpen },
+    { label: "My Projects", href: "/dashboard/projects", icon: FolderGit2 },
+    { label: "My Submissions", href: "/dashboard/submissions", icon: FileText }, // 🔥 The new hub we built
+    { label: "AI Assistant", href: "/dashboard/assistant", icon: Bot, isSpecial: true }, 
+    { label: "Settings", href: "/dashboard/settings", icon: Settings },
+  ];
+
+  const teacherRoutes = [
+    { label: "Dashboard", href: "/teacherDashboard", icon: LayoutDashboard },
+    { label: "My Classes", href: "/dashboard/classes", icon: BookOpen },
+    { label: "All Projects", href: "/projects", icon: FolderGit2 },
+    { label: "Create Project", href: "/teacherDashboard/project/createProject", icon: PlusCircle }, // 🔥 Easy access for teachers
+    { label: "AI Assistant", href: "/dashboard/assistant", icon: Bot, isSpecial: true }, 
+    { label: "Settings", href: "/dashboard/settings", icon: Settings },
+  ];
+
+  const routes = role === "teacher" ? teacherRoutes : studentRoutes;
 
   useEffect(() => {
     setMounted(true);
@@ -40,16 +57,18 @@ export default function Sidebar() {
   return (
     <aside 
       className={`
-        ${isOpen ? "flex" : "hidden"} /* <-- THE TOGGLE LOGIC */
+        ${isOpen ? "flex" : "hidden"} 
         sticky top-16 h-[calc(100vh-64px)] w-64 flex-col border-r border-gray-200 bg-white 
         transition-all duration-300 
         dark:bg-zinc-950 dark:border-zinc-800
       `}
     >
       
-      <div className="flex-1 space-y-1 p-4">
+      <div className="flex-1 space-y-1 p-4 overflow-y-auto">
         {routes.map((route) => {
-          const isActive = pathname === route.href;
+          // Check if the current URL starts with the route href to keep it highlighted when inside sub-pages
+          const isActive = pathname === route.href || (pathname.startsWith(route.href) && route.href !== '/dashboard' && route.href !== '/teacherDashboard');
+          
           return (
             <Link
               key={route.href}
@@ -69,11 +88,11 @@ export default function Sidebar() {
         })}
       </div>
 
-      <div className="border-t border-gray-200 p-4 dark:border-zinc-800">
+      <div className="border-t border-gray-200 p-4 dark:border-zinc-800 shrink-0">
         
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="mb-2 flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-zinc-800"
+          className="mb-2 flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-zinc-800 transition-colors"
         >
           <span className="flex items-center gap-3">
              {mounted && theme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
@@ -81,12 +100,13 @@ export default function Sidebar() {
           </span>
         </button>
 
-        <button 
-        onClick={() => signOut({ callbackUrl: "/login" })}
-        className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10">
+        <Link 
+          href={'/signOut'}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
+        >
           <LogOut className="h-5 w-5"  />
           Sign Out
-        </button>
+        </Link>
       </div>
     </aside>
   );

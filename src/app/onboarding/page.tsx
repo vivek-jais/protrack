@@ -18,6 +18,8 @@ export default function OnboardingPage() {
   
   // Hidden file input ref
   const fileInputRef = useRef<HTMLInputElement>(null);
+  //@ts-ignore
+  // const role=session?.user?.role
 
   // --- 1. Load Session Data Initially ---
   useEffect(() => {
@@ -74,7 +76,9 @@ export default function OnboardingPage() {
       await update({ role: selectedRole, name, image: imagePreview });
 
       router.refresh();
+      if(selectedRole==='student')
       router.push("/dashboard");
+      else if(selectedRole==='teacher') router.push('/teacherDashboard')
 
     } catch (error: any) {
       console.error(error);

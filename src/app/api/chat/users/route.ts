@@ -7,7 +7,7 @@ import Class from "@/models/Class";
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOption);
-    
+
     // --- DEBUG LOGS ---
     console.log("🔹 API HIT: Chat Users Fetch");
     console.log("🔹 User Email:", session?.user?.email);
@@ -30,24 +30,24 @@ export async function GET(req: Request) {
 
     if (role === "teacher") {
       console.log("✅ Logic: Fetching Students for Teacher...");
-      
-      const classes = await Class.find({ professor: userId }).populate("students", "name email image");
+
+      const classes = await Class.find({ professor: userId }).populate("students", "name email image lastActive");
       console.log(`🔹 Found ${classes.length} classes for this teacher.`);
 
       classes.forEach((c) => {
-        
+
         c.students.forEach((student) => {
           // @ts-ignore
-            console.log("   -> Found Student:", student.name);
-            chatUsersMap.set(student._id.toString(), student);
+          console.log("   -> Found Student:", student.name);
+          chatUsersMap.set(student._id.toString(), student);
         });
       });
 
     } else {
       console.log("✅ Logic: Fetching Teachers for Student...");
-      
-      const classes = await Class.find({ students: userId }).populate("professor", "name email image");
-      
+
+      const classes = await Class.find({ students: userId }).populate("professor", "name email image lastActive");
+
       classes.forEach((c) => {
         if (c.professor) {
           // @ts-ignore
@@ -58,7 +58,7 @@ export async function GET(req: Request) {
 
     const result = Array.from(chatUsersMap.values());
     console.log(`🔹 Sending back ${result.length} users.`);
-    
+
     return NextResponse.json(result, { status: 200 });
 
   } catch (error) {

@@ -4,11 +4,13 @@ export interface IUser extends Document {
   name: string;
   email: string;
   image?: string;
-  role: "student" | "teacher"|"pending";
+  role: "student" | "teacher" | "pending";
   bio?: string;
   skills: string[];
-  university?: string;
-  branch?: string;
+  university: string;
+  phoneNumber:number;
+  branch: string;
+  status: "occupied" | "vacant";
   semester?: number;
   socials: {
     github?: string;
@@ -17,48 +19,60 @@ export interface IUser extends Document {
   };
   createdAt: Date;
   updatedAt: Date;
+  lastActive?: Date;
 }
 
 const UserSchema: Schema<IUser> = new Schema(
   {
-    name: { 
-      type: String, 
-      required: true 
+    name: {
+      type: String,
+      required: true
     },
-    email: { 
-      type: String, 
-      required: true, 
-      unique: true 
+    email: {
+      type: String,
+      required: true,
+      unique: true
     },
-    image: { 
-      type: String 
+    image: {
+      type: String
     },
-    role: { 
-      type: String, 
-      enum: ["student", "teacher","pending"], 
-      default: "pending" 
+    phoneNumber:{
+      type:Number,
     },
-    bio: { 
-      type: String 
+    role: {
+      type: String,
+      enum: ["student", "teacher", "pending"],
+      default: "pending"
     },
-    skills: { 
-      type: [String], 
-      default: [] 
+    bio: {
+      type: String
     },
-    university: { 
-      type: String 
+    skills: {
+      type: [String],
+      default: []
     },
-    branch: { 
-      type: String 
+    university: {
+      type: String,
+      default:""
     },
-    semester: { 
-      type: Number 
+    branch: {
+      type: String,
+      default:""
+    },
+    status: {
+      type: String,
+      enum: ['vacant', 'occupoed'],
+      default: "vacant"
+    },
+    semester: {
+      type: Number
     },
     socials: {
       github: { type: String },
       linkedin: { type: String },
       website: { type: String },
     },
+    lastActive: { type: Date },
   },
   { timestamps: true }
 );

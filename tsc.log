@@ -1,0 +1,2 @@
+.next/dev/types/validator.ts(125,39): error TS2306: File 'C:/Users/Win 11/Desktop/protrackUpdated/protrack/src/app/(app)/settings/page.tsx' is not a module.
+.next/dev/types/validator.ts(216,31): error TS2559: Type 'typeof import("C:/Users/Win 11/Desktop/protrackUpdated/protrack/src/app/api/user/[id]/route")' has no properties in common with type 'RouteHandlerConfig<"/api/user/[id]">'.

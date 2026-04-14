@@ -1,8 +1,7 @@
 import User from "@/models/User";
 import { NextResponse } from "next/server";
-import { useSession } from "next-auth/react";
 import connectDb from "@/lib/db";
-export default async function GET(req: Request,
+export async function GET(req: Request,
   { params }: { params: Promise<{ id: string }> } // params is a Promise now
 ){
     try{

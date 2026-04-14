@@ -9,7 +9,7 @@ export const authOption: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       
-      // ✅ ADD THIS BLOCK: Forces Google to show the account list every time
+      
       authorization: {
         params: {
           prompt: "consent",
@@ -20,14 +20,13 @@ export const authOption: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    // ... (Keep your existing signIn and session callbacks EXACTLY as they are) ...
-    // ... Do not delete your previous fixes! ...
+
     async signIn({ user, account }) {
         if (account?.provider === "google") {
             if (!user.email) return false;
             try {
                 await connectDb();
-                const existingUser = await User.findOne({ email: user.email });
+                const existingUser  = await User.findOne({ email: user.email });
                 if (!existingUser) {
                     await User.create({
                         name: user.name || "Anonymous User",
