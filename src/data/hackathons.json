@@ -1,0 +1,35 @@
+[
+  {
+    "id": "1",
+    "title": "Smart India Hackathon 2026",
+    "organization": "MoE, Govt. of India",
+    "date": "August 15 - 16, 2026",
+    "mode": "Offline",
+    "tags": ["AI/ML", "Web3", "IoT"],
+    "image": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=800&auto=format&fit=crop",
+    "applyLink": "https://sih.gov.in",
+    "status": "Upcoming"
+  },
+  {
+    "id": "2",
+    "title": "Global FinTech Sprint",
+    "organization": "Stripe & Vercel",
+    "date": "June 10 - 12, 2026",
+    "mode": "Online",
+    "tags": ["FinTech", "Next.js", "Payments"],
+    "image": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop",
+    "applyLink": "https://devpost.com",
+    "status": "Live"
+  },
+  {
+    "id": "3",
+    "title": "EduTech Buildathon",
+    "organization": "ProTrack Community",
+    "date": "July 01 - 05, 2026",
+    "mode": "Hybrid",
+    "tags": ["Education", "SaaS", "GenAI"],
+    "image": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop",
+    "applyLink": "#",
+    "status": "Upcoming"
+  }
+]

@@ -1,0 +1,24 @@
+<svg width="100%" viewBox="0 0 680 280" role="img" xmlns="http://www.w3.org/2000/svg" style="">
+  <title style="fill:rgb(0, 0, 0);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">ProTrack Logo</title>
+  <desc style="fill:rgb(0, 0, 0);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">ProTrack logo with PT monogram and wordmark</desc>
+
+  <defs>
+    <linearGradient id="g1" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%" stop-color="#085041"/>
+      <stop offset="100%" stop-color="#1D9E75"/>
+    </linearGradient>
+  </defs>
+
+  
+
+  <!-- Icon badge -->
+  <rect x="220" y="40" width="100" height="100" rx="24" fill="url(#g1)" style="stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <!-- PT letters -->
+  <text x="270" y="115" text-anchor="middle" font-family="'Segoe UI', system-ui, sans-serif" font-size="52" font-weight="900" fill="white" letter-spacing="-3" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Segoe UI&quot;, system-ui, sans-serif;font-size:52px;font-weight:900;text-anchor:middle;dominant-baseline:auto">PT</text>
+
+  <!-- Wordmark -->
+  <text x="270" y="185" text-anchor="middle" font-family="'Segoe UI', system-ui, sans-serif" font-size="48" font-weight="800" letter-spacing="-2" style="fill:rgb(17, 17, 17);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Segoe UI&quot;, system-ui, sans-serif;font-size:48px;font-weight:800;text-anchor:middle;dominant-baseline:auto">Pro<tspan style="fill:rgb(29, 158, 117);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Segoe UI&quot;, system-ui, sans-serif;font-size:48px;font-weight:800;text-anchor:middle;dominant-baseline:auto">Track</tspan></text>
+
+  <!-- Tagline -->
+  <text x="270" y="215" text-anchor="middle" font-family="'Segoe UI', system-ui, sans-serif" font-size="13" letter-spacing="4" style="fill:rgb(136, 135, 128);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Segoe UI&quot;, system-ui, sans-serif;font-size:13px;font-weight:400;text-anchor:middle;dominant-baseline:auto">ACADEMIC MANAGEMENT</text>
+</svg>
