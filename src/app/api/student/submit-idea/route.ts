@@ -13,25 +13,33 @@ export async function POST(req: Request) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        const { title, description } = await req.json();
+        // 🔥 THE FIX: Extract projectId from the request body
+        const { title, description, projectId } = await req.json();
 
         if (!title || title.trim().length === 0) {
             return NextResponse.json({ message: "Idea title is required" }, { status: 400 });
+        }
+        
+        if (!projectId) {
+            return NextResponse.json({ message: "Project ID is required" }, { status: 400 });
         }
 
         // @ts-ignore
         const userId = session.user.id;
 
-        // 1. Find the group this student belongs to
-        const group = await Group.findOne({ "members.student": userId });
+        // 🔥 THE FIX: Find the group for THIS SPECIFIC project, not just any project
+        const group = await Group.findOne({ 
+            "members.student": userId,
+            projectId: projectId // Isolates the query to the current project!
+        });
         
         if (!group) {
-            return NextResponse.json({ message: "You must form or join a group first." }, { status: 403 });
+            return NextResponse.json({ message: "You must form or join a group for this project first." }, { status: 403 });
         }
 
-        // Check if an idea was already submitted
+        // Check if an idea was already submitted for THIS project
         if (group.idea && group.idea.title) {
-            return NextResponse.json({ message: "Your team has already submitted an idea." }, { status: 400 });
+            return NextResponse.json({ message: "Your team has already submitted an idea for this project." }, { status: 400 });
         }
 
         // 2. Save the Idea to the Group
@@ -45,20 +53,16 @@ export async function POST(req: Request) {
         const stage1Index = group.stageProgress.findIndex((s: any) => s.stageNumber === 1);
         
         if (stage1Index !== -1) {
-            // 🔥 FIXED: Capital "S" in "Submitted" to match Mongoose enum exactly
             group.stageProgress[stage1Index].status = "Submitted";
             group.stageProgress[stage1Index].submittedAt = new Date();
         } else {
-            // Fallback if stageProgress wasn't initialized properly
             group.stageProgress.push({
                 stageNumber: 1,
-                // 🔥 FIXED: Capital "S" in "Submitted" here as well
                 status: "Submitted",
                 submittedAt: new Date()
             });
         }
         
-        // This will now save successfully without throwing the ValidatorError!
         await group.save();
 
         return NextResponse.json({ message: "Project idea submitted for approval!" }, { status: 200 });

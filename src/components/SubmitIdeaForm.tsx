@@ -1,12 +1,17 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+// 🔥 1. Added useParams here
+import { useRouter, useParams } from "next/navigation"; 
 import { Lightbulb, ArrowRight, Loader2, Rocket } from "lucide-react";
 import { toast } from "react-toastify";
 
 export default function SubmitIdeaForm() {
   const router = useRouter();
+  // 🔥 2. Grab the project ID from the URL
+  const params = useParams();
+  const projectId = params.id; 
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,13 +22,20 @@ export default function SubmitIdeaForm() {
       toast.error("Please enter your project idea.");
       return;
     }
+    
+    // Safety check just in case the URL doesn't have the ID
+    if (!projectId) {
+      toast.error("Project ID is missing!");
+      return;
+    }
 
     try {
       setIsSubmitting(true);
       const res = await fetch("/api/student/submit-idea", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description }),
+        // 🔥 3. Added projectId to the body!
+        body: JSON.stringify({ title, description, projectId }), 
       });
 
       const data = await res.json();

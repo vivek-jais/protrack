@@ -8,7 +8,7 @@ export interface IUser extends Document {
   bio?: string;
   skills: string[];
   university: string;
-  phoneNumber:number;
+  phoneNumber?: number;
   branch: string;
   status: "occupied" | "vacant";
   semester?: number;
@@ -17,6 +17,15 @@ export interface IUser extends Document {
     linkedin?: string;
     website?: string;
   };
+  
+  // 🔥 NEW: Added preferences to the TypeScript Interface
+  preferences: {
+    focusMode: boolean;
+    defaultView: "list" | "grid";
+    showOnlineStatus: boolean;
+    dailyDigest: boolean;
+  };
+  
   createdAt: Date;
   updatedAt: Date;
   lastActive?: Date;
@@ -37,7 +46,7 @@ const UserSchema: Schema<IUser> = new Schema(
       type: String
     },
     phoneNumber:{
-      type:Number,
+      type: Number,
     },
     role: {
       type: String,
@@ -53,15 +62,16 @@ const UserSchema: Schema<IUser> = new Schema(
     },
     university: {
       type: String,
-      default:""
+      default: ""
     },
     branch: {
       type: String,
-      default:""
+      default: ""
     },
     status: {
       type: String,
-      enum: ['vacant', 'occupoed'],
+      // 🔥 FIXED: Changed 'occupoed' to 'occupied' to match the interface
+      enum: ['vacant', 'occupied'], 
       default: "vacant"
     },
     semester: {
@@ -73,6 +83,14 @@ const UserSchema: Schema<IUser> = new Schema(
       website: { type: String },
     },
     lastActive: { type: Date },
+
+    // 🔥 NEW: Added the preferences block for the isolated settings API
+    preferences: {
+      focusMode: { type: Boolean, default: false },
+      defaultView: { type: String, enum: ['list', 'grid'], default: 'list' },
+      showOnlineStatus: { type: Boolean, default: true },
+      dailyDigest: { type: Boolean, default: true }
+    }
   },
   { timestamps: true }
 );

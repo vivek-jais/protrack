@@ -19,7 +19,6 @@ export async function GET(req: Request) {
             return NextResponse.json({ message: "Forbidden" }, { status: 403 });
         }
 
-        // 🔥 Extract projectId from the URL (e.g., /api/teacher/export?projectId=123)
         const { searchParams } = new URL(req.url);
         const projectId = searchParams.get("projectId");
 
@@ -27,7 +26,6 @@ export async function GET(req: Request) {
             return NextResponse.json({ message: "Project ID is required" }, { status: 400 });
         }
 
-        // 🔥 Only fetch groups that belong to THIS specific project
         const groups = await Group.find({ projectId: projectId })
             .populate({
                 path: 'leader',
@@ -35,15 +33,18 @@ export async function GET(req: Request) {
             })
             .lean();
 
-        // Flatten the data into exactly ONE row per team
         const excelRows: any[] = [];
 
         groups.forEach((group: any) => {
-            const ideaTitle = group.idea?.title || "No Idea Submitted Yet";
+            
+            // 🔥 STRICT CHECK: Only looks for the actual text-based idea. 
+            // It will completely ignore uploaded files.
+            const ideaTitle = group.idea?.title || "No Idea Submitted";
+            
             const leaderName = group.leader?.name || "Unknown Leader";
 
             excelRows.push({
-                "Team Name": group.name,
+                "Team Name": group.name || "Unnamed Team",
                 "Leader Name": leaderName,
                 "Pitched Idea": ideaTitle
             });

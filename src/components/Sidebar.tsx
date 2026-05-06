@@ -32,22 +32,20 @@ export default function Sidebar() {
 
   const studentRoutes = [
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { label: "My Classes", href: "/dashboard/classes", icon: BookOpen },
     { label: "My Projects", href: "/dashboard/projects", icon: FolderGit2 },
     { label: "My Submissions", href: "/dashboard/submissions", icon: FileText }, 
     { label: "AI Assistant", href: "/dashboard/mentor", icon: Bot, isSpecial: true }, 
     {label:"All Hackathons",href:"/dashboard/hackathons",icon:Bug},
-    { label: "Settings", href: "/dashboard/settings", icon: Settings }
+    { label: "Settings", href: "/settings", icon: Settings }
     
   ];
 
   const teacherRoutes = [
     { label: "Dashboard", href: "/teacherDashboard", icon: LayoutDashboard },
-    { label: "My Classes", href: "/dashboard/classes", icon: BookOpen },
     { label: "All Projects", href: "/projects", icon: FolderGit2 },
     { label: "Create Project", href: "/teacherDashboard/project/createProject", icon: PlusCircle }, // 🔥 Easy access for teachers
     { label: "AI Assistant", href: "/dashboard/assistant", icon: Bot, isSpecial: true }, 
-    { label: "Settings", href: "/dashboard/settings", icon: Settings },
+    { label: "Settings", href: "/settings", icon: Settings },
   ];
 
   const routes = role === "teacher" ? teacherRoutes : studentRoutes;

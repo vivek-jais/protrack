@@ -106,7 +106,7 @@ export default function TeacherEvaluationERP() {
 
       <div className="bg-white border-b border-gray-200 dark:bg-zinc-900 dark:border-zinc-800 py-6">
         <div className="max-w-[95%] mx-auto px-4">
-          <Link href="/teacherDashboard/projects" className="flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 mb-4 dark:text-zinc-400">
+          <Link href="/projects" className="flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 mb-4 dark:text-zinc-400">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Projects
           </Link>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -119,7 +119,7 @@ export default function TeacherEvaluationERP() {
             
             <div className="flex bg-gray-100 dark:bg-zinc-800 p-1 rounded-xl">
               <div className="mr-2">
-                <button className="cursor-pointer"><ExportExcelButton projectId={projectId as string}/></button>
+               <ExportExcelButton projectId={projectId as string}/>
               </div>
               
               <div className="px-6 py-2.5 text-sm font-bold rounded-lg transition-all bg-white text-blue-600 shadow-sm dark:bg-zinc-950 dark:text-white cursor-default">
