@@ -1,216 +1,249 @@
-'use client';
+"use client";
 
-import { useSession } from 'next-auth/react';
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React from "react";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { 
-  Loader2, 
-  BookOpen, 
-  Users, 
-  TrendingUp, 
-  ShieldCheck, 
-  Quote,
-  Mail
+  ArrowRight, Shield, Layers, Users, BarChart, 
+  Award, CheckCircle, GraduationCap, Loader2,
+  Lightbulb, FileText, Presentation, FileCheck, ChevronRight
 } from "lucide-react";
-import BlinkingDot from './BlinkingDot';
 
-function DashboardPage() {
+export default function DetailedLandingPage() {
   const { data: session, status } = useSession();
-  const router = useRouter();
 
-  // --- 1. AUTHENTICATION LOGIC (Unchanged) ---
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.replace('/login');
-    }
-    // @ts-ignore
-    if (status === 'authenticated' && session?.user?.role === 'pending') {
-      router.replace('/onboarding');
-    }
-  }, [status, session, router]);
-
-  // --- 2. TESTIMONIAL CAROUSEL LOGIC ---
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
-
-  const testimonials = [
-    { quote: "ProTrack completely changed how I manage my CS-302 capstone projects. It is an absolute lifesaver.", author: "Prof. Alan Turing", role: "Computer Science Dept." },
-    { quote: "Finally, a tool where my team can report blockers before it's too late. Highly intuitive design.", author: "Sarah Mitchell", role: "Senior Student" },
-    { quote: "The automated roster management and progress bars make tracking 100+ students effortless.", author: "Dr. R. Patel", role: "Engineering Faculty" },
-    { quote: "Clean, distraction-free, and perfectly tailored for university workflows. I love using it daily.", author: "James K.", role: "Student" },
-  ];
-
-  // Auto-slide every 5 seconds
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [testimonials.length]);
-
-  // --- 3. UI DATA ---
-  const features = [
-    {
-      title: "Real-Time Progress",
-      description: "Monitor project milestones and identify blockers early to ensure every team stays on track without micromanaging.",
-      icon: TrendingUp,
-    },
-    {
-      title: "Seamless Groups",
-      description: "Organize students into structured teams with designated Group Heads, creating clear accountability for submissions.",
-      icon: Users,
-    },
-    {
-      title: "Academic Hub",
-      description: "Move beyond scattered emails. Access class rosters, assignments, and workspaces in one unified dashboard.",
-      icon: BookOpen,
-    },
-    {
-      title: "Secure & Role-Based",
-      description: "Enterprise-grade role management ensures students stay focused while giving professors complete control.",
-      icon: ShieldCheck,
-    },
-  ];
-
-  if (status === 'loading') {
+  // Show a loading state while checking authentication
+  if (status === "loading") {
     return (
-      <div className="flex h-full w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+      <div className="flex min-h-[calc(100vh-4rem)] w-full items-center justify-center bg-gray-50 dark:bg-zinc-950">
+        <Loader2 className="h-10 w-10 animate-spin text-emerald-500" />
       </div>
     );
   }
 
-  if (!session) return null;
+  const isAuthenticated = status === "authenticated";
+  const firstName = session?.user?.name?.split(" ")[0] || "Student";
 
-  // --- 4. DASHBOARD UI ---
   return (
-    // 'w-full overflow-hidden' ensures it never breaks the sidebar layout
-    <div className="w-full overflow-hidden bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+    <div className="relative min-h-[calc(100vh-4rem)] w-full bg-white dark:bg-zinc-950 overflow-hidden">
       
-      {/* HERO SECTION */}
-      <section className="relative flex flex-col items-center justify-center px-6 py-20 text-center md:py-32">
-        <div className="absolute inset-0 z-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-size-[24px_24px]"></div>
+      {/* Background Decor */}
+      <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-emerald-50/50 to-white dark:from-emerald-900/10 dark:to-zinc-950 z-0"></div>
+
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 md:py-20">
         
-        <div className="relative z-10 max-w-4xl space-y-6">
-          <div className="mx-auto inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-4 py-1.5 text-xs font-semibold text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 md:text-sm">
-            <BlinkingDot/>
-            The Standard for Academic Management
-          </div>
-          
-          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">
-            A Unified Platform for <br className="hidden sm:block" />
-            <span className="bg-linear-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
-              Professors & Students
+        {/* ================= 1. HERO SECTION ================= */}
+        <div className="text-center max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-4 py-1.5 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-900/20">
+            <GraduationCap className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <span className="text-xs font-bold tracking-widest text-emerald-700 dark:text-emerald-400 uppercase">
+              Official Platform • NIT Delhi
             </span>
+          </div>
+
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-zinc-900 dark:text-white leading-[1.15] mb-6">
+            The Complete Lifecycle for <br />
+            <span className="text-emerald-600 dark:text-emerald-400">Academic Engineering Projects</span>
           </h1>
-          
-          <p className="mx-auto max-w-2xl text-base text-zinc-500 dark:text-zinc-400 md:text-lg">
-            Bridge the gap between teaching and learning. ProTrack provides a formal, distraction-free environment to track class progress, manage groups, and achieve academic excellence.
+
+          <p className="text-lg text-zinc-600 dark:text-zinc-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+            ProTrack eliminates the chaos of WhatsApp groups and lost emails. It provides a secure, structured, and professor-controlled environment for submitting, evaluating, and certifying mini-projects.
           </p>
-        </div>
-      </section>
 
-      {/* FEATURES SECTION (No Buttons) */}
-      <section className="relative z-10 mx-auto max-w-6xl px-6 py-16 border-t border-zinc-100 dark:border-zinc-900">
-        <div className="mb-12 text-center">
-          <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white sm:text-3xl">
-            Designed for the Modern Classroom
-          </h2>
-          <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">Everything you need to manage courses, minus the clutter.</p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {features.map((feature, index) => (
-            <div 
-              key={index} 
-              className="group flex flex-col rounded-2xl border border-zinc-200 bg-zinc-50/50 p-6 transition-all hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-emerald-900"
-            >
-              <div className="mb-5 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
-                <feature.icon className="h-5 w-5" />
+          {/* DYNAMIC CALL TO ACTION */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            {isAuthenticated ? (
+              <div className="flex flex-col sm:flex-row items-center gap-4 bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-900/30">
+                <div className="text-left">
+                  <p className="text-sm font-bold text-zinc-900 dark:text-white">Welcome back, {firstName}!</p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">You are securely signed in.</p>
+                </div>
+                <Link 
+                  href="/dashboard/projects" 
+                  className="flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-emerald-700 hover:shadow-lg hover:-translate-y-0.5"
+                >
+                  Enter Workspace <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
-              <h3 className="mb-2 text-lg font-bold text-zinc-900 dark:text-white">{feature.title}</h3>
-              <p className="text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
-                {feature.description}
+            ) : (
+              <>
+                <Link 
+                  href="/login" 
+                  className="flex items-center gap-2 rounded-xl bg-emerald-600 px-8 py-3.5 text-base font-bold text-white shadow-md transition-all hover:bg-emerald-700 hover:shadow-lg hover:-translate-y-0.5"
+                >
+                  Sign in with NIT Delhi Account <ArrowRight className="h-4 w-4" />
+                </Link>
+                <div className="flex items-center gap-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                  <Shield className="h-4 w-4 text-emerald-500" /> Domain Restricted (@nitdelhi.ac.in)
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* ================= 2. HOW IT WORKS (THE ACADEMIC WORKFLOW) ================= */}
+        <div className="mt-24 md:mt-32 pt-16 border-t border-zinc-100 dark:border-zinc-800/50">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-extrabold text-zinc-900 dark:text-white">Structured from Idea to Final Delivery</h2>
+            <p className="mt-4 text-zinc-500 dark:text-zinc-400 max-w-2xl mx-auto">
+              Our 4-stage academic pipeline ensures students get continuous feedback and professors can monitor progress without the administrative overhead.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
+            {/* Desktop Connector Line */}
+            <div className="hidden md:block absolute top-12 left-1/8 right-1/8 h-0.5 bg-zinc-200 dark:bg-zinc-800 z-0"></div>
+
+            {/* Stage 1 */}
+            <div className="relative z-10 bg-white dark:bg-zinc-950 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm text-center flex flex-col items-center">
+              <div className="h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4 ring-4 ring-white dark:ring-zinc-950">
+                <Lightbulb className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Stage 1: Idea</h3>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                Form a group, lock in your team members, and submit your initial project concept for professor approval.
               </p>
             </div>
-          ))}
+
+            {/* Stage 2 */}
+            <div className="relative z-10 bg-white dark:bg-zinc-950 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm text-center flex flex-col items-center">
+              <div className="h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4 ring-4 ring-white dark:ring-zinc-950">
+                <FileText className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Stage 2: Proposal</h3>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                Submit detailed SRS documents, architectural diagrams, and tech stack choices for architectural review.
+              </p>
+            </div>
+
+            {/* Stage 3 */}
+            <div className="relative z-10 bg-white dark:bg-zinc-950 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm text-center flex flex-col items-center">
+              <div className="h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4 ring-4 ring-white dark:ring-zinc-950">
+                <Presentation className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Stage 3: Mid-Review</h3>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                Upload half-completed progress reports, initial code bases, and receive mid-semester grading.
+              </p>
+            </div>
+
+            {/* Stage 4 */}
+            <div className="relative z-10 bg-white dark:bg-zinc-950 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm text-center flex flex-col items-center">
+              <div className="h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4 ring-4 ring-white dark:ring-zinc-950">
+                <FileCheck className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Stage 4: Final</h3>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                Final code submission, live presentation grading, and automatic certificate generation upon completion.
+              </p>
+            </div>
+          </div>
         </div>
-      </section>
 
-      {/* SLIDING TESTIMONIALS SECTION (Interval Carousel) */}
-      <section className="bg-zinc-50 py-20 dark:bg-zinc-900/30">
-        <div className="mx-auto max-w-4xl px-6 text-center">
-          <h2 className="mb-10 text-xl font-bold tracking-tight text-zinc-900 dark:text-white">
-            Trusted by Academic Leaders
-          </h2>
+        {/* ================= 3. DETAILED FEATURES GRID ================= */}
+        <div className="mt-24 md:mt-32 pt-16 border-t border-zinc-100 dark:border-zinc-800/50">
+          <div className="mb-12">
+            <h2 className="text-3xl font-extrabold text-zinc-900 dark:text-white mb-4">Platform Capabilities</h2>
+            <p className="text-zinc-500 dark:text-zinc-400">Designed to handle the complexities of university-level team projects.</p>
+          </div>
 
-          <div className="relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 md:p-12">
-            <Quote className="mx-auto mb-6 h-8 w-8 text-emerald-500/30" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             
-            {/* Carousel Track */}
-            <div 
-              className="flex transition-transform duration-700 ease-in-out"
-              style={{ transform: `translateX(-${activeTestimonial * 100}%)` }}
-            >
-              {testimonials.map((testimonial, idx) => (
-                <div key={idx} className="w-full shrink-0 px-4">
-                  <p className="mx-auto max-w-2xl text-lg font-medium italic text-zinc-700 dark:text-zinc-300 md:text-xl">
-                    "{testimonial.quote}"
-                  </p>
-                  <div className="mt-8">
-                    <h4 className="font-bold text-zinc-900 dark:text-white">{testimonial.author}</h4>
-                    <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">{testimonial.role}</p>
-                  </div>
-                </div>
-              ))}
+            <div className="flex gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400">
+                <Shield className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Secure Roll Number Verification</h3>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  The system automatically verifies Google Auth logins against the official NIT Delhi student database (Roll Numbers 241210000–241210138), preventing unauthorized access.
+                </p>
+              </div>
             </div>
 
-            {/* Dots Indicator */}
-            <div className="mt-8 flex justify-center gap-2">
-              {testimonials.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveTestimonial(idx)}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    idx === activeTestimonial ? "w-6 bg-emerald-500" : "w-2 bg-zinc-300 dark:bg-zinc-700"
-                  }`}
-                  aria-label={`Go to testimonial ${idx + 1}`}
-                />
-              ))}
+            <div className="flex gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400">
+                <Users className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Smart Team Builder</h3>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  Students can invite peers to form groups within professor-defined size limits. Once a group is full, the workspace locks to prevent unauthorized modifications.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400">
+                <Layers className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Centralized Submission Hub</h3>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  Upload PDFs, code files, and presentations directly to your group's workspace. View a complete timeline of your uploads and teacher feedback in one place.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400">
+                <CheckCircle className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Teacher Evaluation Portal</h3>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  Professors get a dedicated dashboard to view all groups, download submissions, assign marks out of the stage maximum, and leave constructive text feedback.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400">
+                <BarChart className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Analytics & Export</h3>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  Teachers can track class progress at a glance and export all grades to Excel with a single click at the end of the semester for official university records.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400">
+                <Award className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Automated Certificates</h3>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  Upon clearing the final stage, the system dynamically generates a customized PDF completion certificate featuring a unique verifiable ID and QR code.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* ================= 4. BOTTOM CTA ================= */}
+        {!isAuthenticated && (
+          <div className="mt-24 md:mt-32 rounded-3xl bg-zinc-900 dark:bg-zinc-900 border border-zinc-800 px-6 py-16 text-center text-white shadow-2xl relative overflow-hidden">
+            <div className="absolute inset-0 bg-emerald-500/10 mix-blend-overlay"></div>
+            <div className="relative z-10">
+              <h2 className="text-3xl font-extrabold mb-4">Start managing your projects today.</h2>
+              <p className="text-zinc-400 mb-8 max-w-xl mx-auto">
+                Join the rest of the Computer Science department on ProTrack. Use your official NIT Delhi credentials to log in.
+              </p>
+              <Link
+                href="/login" 
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-8 py-4 text-base font-bold text-white shadow-lg transition-all hover:bg-emerald-400 hover:-translate-y-1"
+              >
+                Sign In to ProTrack <ChevronRight className="h-5 w-5" />
+              </Link>
             </div>
           </div>
-        </div>
-      </section>
+        )}
 
-      {/* FORMAL FOOTER */}
-      <footer className="border-t border-zinc-200 bg-white py-10 dark:border-zinc-900 dark:bg-zinc-950">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-6 text-center md:flex-row md:text-left">
-          
-          <div>
-            <span className="text-xl font-black tracking-tight text-zinc-900 dark:text-white">ProTrack.</span>
-            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-              Setting the standard for academic management.
-            </p>
-          </div>
-
-          <div className="flex flex-col items-center gap-2 md:items-end">
-            <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
-              Designed & Developed by <br className="block sm:hidden" />
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">Pranshu Singla</span> & <span className="font-bold text-emerald-600 dark:text-emerald-400">Vivek Jaiswal</span>
-            </p>
-            <a 
-              href="mailto:contact@protrack.com" 
-              className="inline-flex items-center gap-2 rounded-lg bg-zinc-100 px-3 py-1.5 text-xs font-semibold text-zinc-600 transition-colors hover:bg-emerald-50 hover:text-emerald-600 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400"
-            >
-              <Mail className="h-3.5 w-3.5" />
-              Contact us for improvements
-            </a>
-          </div>
-
-        </div>
-      </footer>
-
+      </div>
     </div>
   );
 }
-
-export default DashboardPage;

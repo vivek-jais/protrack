@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { 
   Loader2, FileText, CheckCircle2, Clock, FolderDot, ExternalLink, ArrowLeft, Calendar, Target, Lock, MessageSquare
 } from "lucide-react";
@@ -13,7 +14,8 @@ export default function ProjectSubmissionsTab() {
   const params = useParams();
   const { data: session } = useSession();
   
-  const projectId = params.id;
+  // Ensure projectId is treated as a string
+  const projectId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [project, setProject] = useState<any>(null);
   const [myGroup, setMyGroup] = useState<any>(null);
@@ -23,40 +25,66 @@ export default function ProjectSubmissionsTab() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        let projData = null;
+        let groupData = null;
+
         // 1. Fetch Project Details
         const projRes = await fetch(`/api/project/${projectId}`);
         if (projRes.ok) {
-          const projData = await projRes.json();
-          setProject(projData.project);
+          const resJson = await projRes.json();
+          projData = resJson.project;
+          setProject(projData);
         }
 
-        // 2. Fetch Group Details
+        // 2. Fetch Group Details (This handles BOTH Solo and Multi-member teams!)
         const groupRes = await fetch(`/api/project/${projectId}/group`);
         if (groupRes.ok) {
-          const groupData = await groupRes.json();
-          setMyGroup(groupData.group);
+          const resJson = await groupRes.json();
+          groupData = resJson.group;
+          setMyGroup(groupData);
         }
 
-        // 3. Fetch from global /api/submissions
-        const subRes = await fetch('/api/submissions');
-        if (subRes.ok) {
-          const subData = await subRes.json();
-          
-          // 🔥 BUG FIX: Force both IDs to be strings so they match perfectly
-          const filteredSubs = subData.submissions.filter((sub: any) => 
-            String(sub.projectId) === String(projectId)
-          );
-          setProjectSubmissions(filteredSubs);
+        // 3. 🔥 THE FIX: Extract Submissions directly from Group Stage Progress
+        // Because Solo workspaces are just "Groups of 1", this handles both flawlessly.
+        if (projData && groupData && groupData.stageProgress) {
+            const mappedSubmissions = groupData.stageProgress
+              .filter((sp: any) => sp.status !== "Pending") // Only show submitted/graded stages
+              .map((sp: any) => {
+                  // Match the progress slot to the project blueprint
+                  const stageDef = projData.stages.find((s: any) => s.stageNumber === sp.stageNumber);
+                  
+                  // Legacy Fallback (just in case old submissions are stuck in the project array)
+                  const legacySub = stageDef?.submissions?.find((s:any) => String(s.groupId) === String(groupData._id));
+
+                  const fileUrl = sp.submissionUrl || legacySub?.documents?.[0]?.fileUrl;
+
+                  return {
+                      stageIndex: sp.stageNumber,
+                      stageName: stageDef?.name || stageDef?.title || `Stage ${sp.stageNumber}`,
+                      maxMarks: stageDef?.marks || stageDef?.maxMarks || 100,
+                      status: sp.status.toLowerCase() === 'graded' || legacySub?.status === 'evaluated' ? 'graded' : 'submitted',
+                      submittedAt: sp.submittedAt || legacySub?.submittedAt,
+                      submissionUrl: fileUrl,
+                      fileName: fileUrl ? fileUrl.split('/').pop().replace(/^\d+-/, '') : "View Submission", // Cleans up the timestamp prefix
+                      marksAwarded: sp.marksAwarded || legacySub?.evaluation?.marksAwarded,
+                      feedback: sp.feedback || legacySub?.evaluation?.feedback
+                  };
+              });
+
+            // Sort by stage number descending (newest stages first)
+            mappedSubmissions.sort((a: any, b: any) => b.stageIndex - a.stageIndex);
+            setProjectSubmissions(mappedSubmissions);
         }
         
       } catch (err) {
         toast.error("Error loading submissions data.");
+        console.error(err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (session) fetchData();
+    if (session && projectId) fetchData();
   }, [session, projectId]);
 
   const formatDate = (dateString?: string) => {
@@ -78,7 +106,7 @@ export default function ProjectSubmissionsTab() {
       {/* 🚀 HEADER & TABS */}
       <div className="bg-white border-b border-gray-200 dark:bg-zinc-900 dark:border-zinc-800 py-6">
         <div className="max-w-7xl mx-auto px-4">
-          <Link href="/projects" className="flex items-center text-sm font-medium text-gray-500 hover:text-emerald-600 mb-4 dark:text-zinc-400 transition-colors">
+          <Link href="/dashboard/projects" className="flex items-center text-sm font-medium text-gray-500 hover:text-emerald-600 mb-4 dark:text-zinc-400 transition-colors">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Projects
           </Link>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -137,7 +165,7 @@ export default function ProjectSubmissionsTab() {
           <div className="p-16 text-center flex flex-col items-center bg-white rounded-2xl border border-gray-200 dark:bg-zinc-900 dark:border-zinc-800">
             <Lock className="h-12 w-12 text-gray-300 dark:text-zinc-700 mb-4" />
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">Workspace Locked</h3>
-            <p className="text-sm text-gray-500 mt-2">You must form a team before you can view submissions.</p>
+            <p className="text-sm text-gray-500 mt-2">You must form a team or join solo before you can view submissions.</p>
           </div>
         ) : projectSubmissions.length === 0 ? (
           <div className="flex flex-col items-center justify-center bg-white rounded-3xl border border-gray-200 dark:bg-zinc-900 dark:border-zinc-800 p-16 text-center shadow-sm">
@@ -162,13 +190,7 @@ export default function ProjectSubmissionsTab() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-zinc-800">
-                  {projectSubmissions.map((sub, idx) => {
-                    
-                    // We fetch the exact submission from the project object to ensure we have the feedback
-                    const stageData = project.stages[sub.stageIndex - 1];
-                    const exactSubmission = stageData?.submissions?.find((s:any) => String(s.groupId) === String(myGroup._id));
-
-                    return (
+                  {projectSubmissions.map((sub, idx) => (
                       <tr key={idx} className="hover:bg-gray-50/50 transition-colors dark:hover:bg-zinc-950/30 group">
                         
                         {/* Stage Info */}
@@ -187,29 +209,28 @@ export default function ProjectSubmissionsTab() {
                             
                             {/* Files */}
                             <div className="flex flex-wrap gap-2">
-                              {sub.documents?.map((doc: any, dIdx: number) => (
+                              {sub.submissionUrl && (
                                 <a 
-                                  key={dIdx}
-                                  href={doc.fileUrl} 
+                                  href={sub.submissionUrl} 
                                   target="_blank" 
                                   rel="noopener noreferrer"
                                   className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 hover:border-emerald-200 transition-all dark:bg-emerald-900/10 dark:text-emerald-400 dark:border-emerald-900/30 dark:hover:bg-emerald-900/20 w-max"
                                 >
                                   <FileText className="h-4 w-4 shrink-0 opacity-80" />
-                                  <span className="truncate max-w-[200px] text-xs font-bold">{doc.fileName}</span>
+                                  <span className="truncate max-w-[200px] text-xs font-bold">{sub.fileName}</span>
                                   <ExternalLink className="h-3 w-3 opacity-50 shrink-0" />
                                 </a>
-                              ))}
+                              )}
                             </div>
 
                             {/* 🔥 TEACHER FEEDBACK VISIBLE TO STUDENTS */}
-                            {sub.status === 'evaluated' && exactSubmission?.evaluation?.feedback && (
+                            {sub.status === 'graded' && sub.feedback && (
                               <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-xl dark:bg-emerald-900/10 dark:border-emerald-900/20">
                                 <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-2 flex items-center gap-1.5 dark:text-emerald-500">
                                   <MessageSquare className="h-3 w-3" /> Teacher Remarks
                                 </p>
                                 <p className="text-sm text-emerald-900 dark:text-emerald-100 leading-relaxed">
-                                  "{exactSubmission.evaluation.feedback}"
+                                  "{sub.feedback}"
                                 </p>
                               </div>
                             )}
@@ -227,12 +248,12 @@ export default function ProjectSubmissionsTab() {
 
                         {/* Status */}
                         <td className="px-6 py-5 align-top text-right">
-                          {sub.status === 'evaluated' ? (
+                          {sub.status === 'graded' ? (
                             <div className="flex flex-col items-end gap-1.5">
                               <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg dark:bg-emerald-900/20 dark:border-emerald-900/30 dark:text-emerald-400">
                                 <CheckCircle2 className="h-4 w-4" /> Evaluated
                               </span>
-                              <span className="text-xs font-bold text-gray-500 dark:text-zinc-400">Score: <span className="text-gray-900 dark:text-white">{sub.marksAwarded || exactSubmission?.evaluation?.marksAwarded}</span>/{sub.maxMarks || stageData?.maxMarks}</span>
+                              <span className="text-xs font-bold text-gray-500 dark:text-zinc-400">Score: <span className="text-gray-900 dark:text-white">{sub.marksAwarded}</span>/{sub.maxMarks}</span>
                             </div>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-lg dark:bg-emerald-900/20 dark:border-emerald-900/30 dark:text-emerald-400">
@@ -242,8 +263,7 @@ export default function ProjectSubmissionsTab() {
                         </td>
 
                       </tr>
-                    );
-                  })}
+                  ))}
                 </tbody>
               </table>
             </div>

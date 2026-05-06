@@ -35,59 +35,35 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     }
 }
 
-// ==========================================
-// POST: Create a new Group specifically for this Project
-// ==========================================
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         await connectDb();
         const session = await getServerSession(authOption);
         const { id: projectId } = await params;
 
-        if (!session || !session.user) {
-            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-        }
+        if (!session || !session.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
         // @ts-ignore
         const userId = session.user.id;
         const body = await req.json();
-
-        // invitees expected format from frontend: [{ userId: "...", role: "Frontend" }]
         const { name, invitees } = body;
 
-        if (!name) {
-            return NextResponse.json({ message: "Group name is required." }, { status: 400 });
-        }
+        if (!name) return NextResponse.json({ message: "Group name is required." }, { status: 400 });
 
-        // 1. Verify the Project exists and grab its classId
         const project = await Project.findById(projectId);
-        if (!project) {
-            return NextResponse.json({ message: "Project not found. You must join a valid project to form a group." }, { status: 404 });
-        }
+        if (!project) return NextResponse.json({ message: "Project not found." }, { status: 404 });
 
-        // 2. Project-Specific Availability Check
-        // Check if the user is already in a group for THIS project.
-        // Important: Update query to match your schema's 'student' key!
         const existingGroup = await Group.findOne({ 
             projectId: projectId, 
             "members.student": userId 
         });
 
-        if (existingGroup) {
-            return NextResponse.json({ message: "You are already part of a team for this specific project." }, { status: 400 });
-        }
+        if (existingGroup) return NextResponse.json({ message: "You are already part of a team." }, { status: 400 });
 
-        // 3. Initialize the Members array with the Group Creator
-        // 🔥 FIXED: Using 'student', 'assignedRole', and 'joinStatus' to match your schema
         const formattedMembers = [
-            {
-                student: userId,           
-                assignedRole: "Team Lead",     
-                joinStatus: "joined"       
-            }
+            { student: userId, assignedRole: "Team Lead", joinStatus: "joined" }
         ];
 
-        // 4. Add the invited classmates as "Pending" members
         if (invitees && Array.isArray(invitees)) {
             for (const invitee of invitees) {
                 if (invitee.userId !== userId) {
@@ -100,20 +76,48 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             }
         }
 
-        // 5. Create the Project-Specific Group
-        const newGroup = await Group.create({
+        const initialStageProgress = (project.stages || []).map((stage: any, index: number) => ({
+            stageNumber: stage.stageNumber || (index + 1),
+            status: "Pending",
+            marksAwarded: 0,
+            feedback: ""
+        }));
+
+        const groupPayload: any = {
             name,
             projectId: project._id,
-            classId: project.classId, 
             leader: userId,
-            members: formattedMembers, // 🔥 Passes validation perfectly now
-            status: "forming" // Or whatever your schema defaults to
+            members: formattedMembers, 
+            status: "forming", 
+            currentStage: 1, 
+            stageProgress: initialStageProgress 
+        };
+
+        if (project.classId) {
+            groupPayload.classId = project.classId;
+        }
+
+        // 1. Create the new Group
+        const newGroup = await Group.create(groupPayload);
+
+        // ==========================================
+        // 🔥 THE FIX: SYNC WITH THE PROJECT ARRAY
+        // ==========================================
+        // Extract all the student IDs from the newly formed team
+        const memberIds = formattedMembers.map(m => m.student);
+
+        // Push any ID that isn't already in the project's joinedStudents array
+        memberIds.forEach(id => {
+            if (!project.joinedStudents.includes(id)) {
+                project.joinedStudents.push(id);
+            }
         });
 
-        return NextResponse.json({ 
-            message: "Team formed and invitations sent!", 
-            group: newGroup 
-        }, { status: 201 });
+        // Save the updated project document to MongoDB!
+        await project.save();
+        // ==========================================
+
+        return NextResponse.json({ message: "Team formed successfully!", group: newGroup }, { status: 201 });
 
     } catch (error) {
         console.error("Create Group Error:", error);

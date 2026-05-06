@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { toast, ToastContainer, Zoom } from "react-toastify";
 
+import ExportExcelButton from "@/components/ExportExcelButton";
+
 export default function TeacherProjectWorkspace() {
   const params = useParams();
   const projectId = params.id
@@ -81,10 +83,19 @@ export default function TeacherProjectWorkspace() {
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{project.title}</h1>
               <p className="mt-2 text-sm text-gray-500 dark:text-zinc-400">Class Evaluation Workspace</p>
             </div>
-            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
-              <Users className="h-5 w-5 text-blue-600" />
-              <span className="font-bold text-gray-900 dark:text-white">{classGroups.length} Teams</span>
+            
+            {/* 🔥 2. ADDED THE EXPORT BUTTON TO THE RIGHT SIDE UI */}
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              
+              {/* Excel Download Button */}
+              <ExportExcelButton projectId={projectId as string} />
+
+              <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
+                <Users className="h-5 w-5 text-blue-600" />
+                <span className="font-bold text-gray-900 dark:text-white">{classGroups.length} Teams</span>
+              </div>
             </div>
+
           </div>
         </div>
 

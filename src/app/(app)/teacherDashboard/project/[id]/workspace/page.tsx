@@ -8,6 +8,7 @@ import {
   ExternalLink, Save, Clock, MessageSquare, Loader
 } from "lucide-react";
 import Link from "next/link";
+import ExportExcelButton from "@/components/ExportExcelButton";
 
 export default function TeacherEvaluationERP() {
   const params = useParams();
@@ -117,6 +118,10 @@ export default function TeacherEvaluationERP() {
             </div>
             
             <div className="flex bg-gray-100 dark:bg-zinc-800 p-1 rounded-xl">
+              <div className="mr-2">
+                <button className="cursor-pointer"><ExportExcelButton projectId={projectId as string}/></button>
+              </div>
+              
               <div className="px-6 py-2.5 text-sm font-bold rounded-lg transition-all bg-white text-blue-600 shadow-sm dark:bg-zinc-950 dark:text-white cursor-default">
                 Evaluation Matrix
               </div>

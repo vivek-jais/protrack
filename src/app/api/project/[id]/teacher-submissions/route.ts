@@ -20,36 +20,76 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
             return NextResponse.json({ message: "Forbidden" }, { status: 403 });
         }
 
-        // 1. Fetch the project
-        const project = await Project.findById(projectId);
+        // 1. Fetch the project (we need this for the stage blueprints like maxMarks)
+        const project = await Project.findById(projectId).lean();
         if (!project) return NextResponse.json({ message: "Project not found" }, { status: 404 });
 
-        // 2. Fetch all groups for this project so we can map their names
-        const groups = await Group.find({ projectId: projectId }).select("_id name");
+        // 2. Fetch all groups that belong to this specific project
+        const groups = await Group.find({ projectId: projectId }).lean();
 
-        // 3. Extract and flatten all submissions from the project stages
         let teacherSubmissions: any[] = [];
 
-        project.stages.forEach((stage: any, stageIndex: number) => {
+        // 3. --- NEW ARCHITECTURE: Extract from Group Stage Progress ---
+        groups.forEach((group: any) => {
+            (group.stageProgress || []).forEach((progress: any) => {
+                // Ignore stages that haven't been submitted yet
+                if (progress.status === "Pending") return;
+
+                const stageBlueprint = project.stages?.find((s: any) => s.stageNumber === progress.stageNumber);
+
+                teacherSubmissions.push({
+                    stageIndex: progress.stageNumber,
+                    stageName: stageBlueprint?.name || stageBlueprint?.title || `Stage ${progress.stageNumber}`,
+                    groupId: group._id,
+                    teamName: group.name || "Unknown Team",
+                    // Map the new status terminology back to what your UI expects
+                    status: progress.status.toLowerCase() === "graded" ? "evaluated" : "submitted",
+                    submittedAt: progress.submittedAt,
+                    // Reconstruct the documents array for the UI
+                    documents: progress.submissionUrl ? [{
+                        fileName: progress.submissionUrl.split('/').pop().replace(/^\d+-/, ''),
+                        fileUrl: progress.submissionUrl
+                    }] : [],
+                    // Reconstruct the evaluation object for the UI
+                    evaluation: progress.status.toLowerCase() === "graded" ? {
+                        marksAwarded: progress.marksAwarded,
+                        feedback: progress.feedback
+                    } : null,
+                    maxMarks: stageBlueprint?.maxMarks || stageBlueprint?.marks || 100
+                });
+            });
+        });
+
+        // 4. --- LEGACY FALLBACK --- (Preserves older submissions)
+        project.stages?.forEach((stage: any, index: number) => {
             if (stage.submissions && stage.submissions.length > 0) {
                 stage.submissions.forEach((sub: any) => {
-                    // Match the group ID to get the team name
-                    const groupName = groups.find(g => String(g._id) === String(sub.groupId))?.name || "Unknown Team";
-                    
-                    teacherSubmissions.push({
-                        stageIndex: stageIndex + 1,
-                        stageName: stage.stageName,
-                        groupId: sub.groupId,
-                        teamName: groupName,
-                        status: sub.status,
-                        submittedAt: sub.submittedAt,
-                        documents: sub.documents || [],
-                        evaluation: sub.evaluation || null,
-                        maxMarks: stage.maxMarks
-                    });
+                    // Check to make sure we haven't already added this submission via the new architecture
+                    const alreadyAdded = teacherSubmissions.some(ts => 
+                        String(ts.groupId) === String(sub.groupId) && ts.stageIndex === (index + 1)
+                    );
+
+                    if (!alreadyAdded) {
+                        const groupName = groups.find(g => String(g._id) === String(sub.groupId))?.name || "Unknown Team";
+                        
+                        teacherSubmissions.push({
+                            stageIndex: index + 1,
+                            stageName: stage.stageName || stage.name || stage.title || `Stage ${index + 1}`,
+                            groupId: sub.groupId,
+                            teamName: groupName,
+                            status: sub.status,
+                            submittedAt: sub.submittedAt,
+                            documents: sub.documents || [],
+                            evaluation: sub.evaluation || null,
+                            maxMarks: stage.maxMarks || stage.marks || 100
+                        });
+                    }
                 });
             }
         });
+
+        // 5. Sort submissions: Most recent submissions at the top
+        teacherSubmissions.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
 
         return NextResponse.json({ submissions: teacherSubmissions }, { status: 200 });
 

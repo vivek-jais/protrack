@@ -31,70 +31,76 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             return NextResponse.json({ message: "Group ID and File are required." }, { status: 400 });
         }
 
+        // 1. Fetch the Group
         const group = await Group.findById(groupId);
         if (!group) return NextResponse.json({ message: "Group not found" }, { status: 404 });
-        if (group.leader.toString() !== userId) return NextResponse.json({ message: "Only the Team Leader can submit work." }, { status: 403 });
-
-        const project = await Project.findById(projectId);
-        if (!project) return NextResponse.json({ message: "Project not found" }, { status: 404 });
         
-        if (isNaN(index) || index < 0 || index >= project.stages.length) {
-            return NextResponse.json({ message: "Invalid stage" }, { status: 404 });
+        if (group.leader.toString() !== userId) {
+            return NextResponse.json({ message: "Only the Team Lead can submit work." }, { status: 403 });
         }
-        
-        const stage = project.stages[index];
-        
-        // 1. Convert the uploaded file into a readable Buffer
+
+        // 2. Fetch the Project
+        const project = await Project.findById(projectId);
+        if (!project || isNaN(index) || index < 0 || index >= project.stages.length) {
+            return NextResponse.json({ message: "Invalid project or stage." }, { status: 404 });
+        }
+
+        // 🔥 FIX 1: Add a fallback `|| (index + 1)` in case the Project stage lacks a stageNumber
+        const targetStageNumber = project.stages[index].stageNumber || (index + 1);
+
+        // 3. Handle File Upload Logic
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
-
-        // 2. Define the path to the Next.js 'public/uploads' folder
         const uploadDir = path.join(process.cwd(), "public/uploads");
-
-        // 3. Create the 'public/uploads' folder if it doesn't exist yet
+        
         if (!existsSync(uploadDir)) {
             await mkdir(uploadDir, { recursive: true });
         }
 
-        // 4. Create a clean, unique filename (removes spaces and special chars)
         const safeFilename = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "");
         const uniqueName = `${Date.now()}-${safeFilename}`;
         const filePath = path.join(uploadDir, uniqueName);
-
-        // 5. Write the file to your hard drive
         await writeFile(filePath, buffer);
-
-        // 6. This is the URL the frontend will use to open the file
+        
         const fileUrl = `/uploads/${uniqueName}`;
 
-        const newDocument = {
-            fileName: file.name,
-            fileUrl: fileUrl,
-            fileType: file.type || "application/octet-stream",
-            uploadedAt: new Date()
-        };
+        // 4. Update the Group's stageProgress array
+        const progressSlotIndex = group.stageProgress.findIndex(
+            (sp: any) => sp.stageNumber === targetStageNumber
+        );
 
-        // ==========================================
-
-        let submission = stage.submissions.find((s: any) => s.groupId.toString() === groupId);
-
-        if (!submission) {
-            stage.submissions.push({
-                groupId: groupId,
-                submittedBy: userId,
-                documents: [newDocument], 
-                status: "submitted",
-                submittedAt: new Date()
-            });
+        if (progressSlotIndex === -1) {
+             group.stageProgress.push({
+                 stageNumber: targetStageNumber,
+                 status: "Submitted",
+                 submissionUrl: fileUrl,
+                 submittedAt: new Date()
+             });
         } else {
-            submission.documents.push(newDocument);
-            submission.status = "submitted";
-            submission.submittedAt = new Date();
+             group.stageProgress[progressSlotIndex].status = "Submitted";
+             group.stageProgress[progressSlotIndex].submissionUrl = fileUrl;
+             group.stageProgress[progressSlotIndex].submittedAt = new Date();
         }
 
-        await project.save();
+        group.markModified('stageProgress');
+        
+        if (group.currentStage === targetStageNumber && group.currentStage < project.stages.length) {
+            group.currentStage += 1;
+        }
 
-        return NextResponse.json({ message: "File submitted successfully!", project }, { status: 200 });
+        // 🔥 FIX 2: THE SELF-HEALING LOOP
+        // This prevents the "stageProgress.3.stageNumber is required" error by 
+        // ensuring ALL items in the array have a valid stageNumber before Mongoose validates them.
+        group.stageProgress.forEach((sp: any, i: number) => {
+            if (!sp.stageNumber) {
+                sp.stageNumber = i + 1;
+            }
+        });
+
+        // Now it will save flawlessly!
+        await group.save();
+
+        return NextResponse.json({ message: "File submitted successfully!", group }, { status: 200 });
 
     } catch (error) {
         console.error("Submit Stage Error:", error);

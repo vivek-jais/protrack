@@ -12,29 +12,36 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         await connectDb();
         const session = await getServerSession(authOption);
         
-        // Notice: This is the PROJECT ID, not the Class ID!
         const { id: projectId } = await params; 
 
         if (!session || !session.user) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        // 1. Fetch the project to get its parent Class ID
+        // 1. Fetch the project
         const project = await Project.findById(projectId);
-        if (!project || !project.classId) {
+        if (!project) {
             return NextResponse.json({ availableStudents: [] }, { status: 200 });
         }
 
-        // 2. Fetch the Class to get the list of enrolled student IDs
-        const classData = await Class.findById(project.classId);
-        if (!classData || !classData.students || classData.students.length === 0) {
-            return NextResponse.json({ availableStudents: [] }, { status: 200 });
-        }
+        let allClassStudents = [];
 
-        // Fetch the detailed User profiles for everyone in the class
-        const allClassStudents = await User.find({ 
-            _id: { $in: classData.students } 
-        }).select("name email image");
+        // 2. Fetch Potential Teammates (EXCLUDING TEACHERS)
+        if (project.classId) {
+            // A. Class Project: Fetch enrolled students, but strictly block teachers just in case
+            const classData = await Class.findById(project.classId);
+            if (classData && classData.students && classData.students.length > 0) {
+                allClassStudents = await User.find({ 
+                    _id: { $in: classData.students },
+                    role: { $ne: "teacher" } // 🔥 Ensure no teachers slip into class rosters
+                }).select("name email image role");
+            }
+        } else {
+            // B. Standalone Project: Fetch all users, but strictly IGNORE teachers
+            allClassStudents = await User.find({
+                role: { $ne: "teacher" } // 🔥 THE FIX: Block teachers from the global pool
+            }).select("name email image role");
+        }
 
         // 3. Find ALL Groups formed for THIS specific project
         const projectGroups = await Group.find({ projectId: projectId });
@@ -43,8 +50,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         const occupiedUserIds = new Set();
         projectGroups.forEach(group => {
             group.members.forEach((member: any) => {
-                if (member.user) {
-                    occupiedUserIds.add(member.user.toString());
+                if (member.student) {
+                    occupiedUserIds.add(member.student.toString());
                 }
             });
         });

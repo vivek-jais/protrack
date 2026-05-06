@@ -73,66 +73,31 @@ export async function GET(req: Request) {
 
         // @ts-ignore
         const userId = session.user.id;
-        // @ts-ignore
-        const role = session.user.role;
 
-        let projects = [];
+        // 1. Fetch all projects relevant to this student
+        const projects = await Project.find({}).lean(); 
 
-        if (role === "teacher") {
-            // Teachers just see the projects they created
-            projects = await Project.find({ professor: userId })
-                .populate("classId", "name code")
-                .sort({ createdAt: -1 });
-        } 
-        else if (role === "student") {
-            // 1. Find all classes the student is enrolled in
-            const enrolledClasses = await Class.find({ students: userId }).select("_id");
-            const classIds = enrolledClasses.map(c => c._id);
+        // 2. Fetch ALL groups where this specific user is a member
+        const userGroups = await Group.find({ 
+            "members.student": userId 
+        }).lean();
 
-            // 2. Fetch projects assigned to their classes OR standalone projects
-            // Notice: No Group logic here at all!
-            projects = await Project.find({
-                $or: [
-                    { classId: { $in: classIds } },
-                    { classId: null },
-                    { classId: { $exists: false } }
-                ]
-            })
-            .populate("classId", "name code")
-            .populate("professor", "name")
-            .sort({ deadline: 1 });
-        }
+        // Create an array of Project IDs that the user is already enrolled in
+        const enrolledProjectIds = userGroups.map(group => group.projectId.toString());
 
-        return NextResponse.json({ projects }, { status: 200 });
+        // 3. Map through the projects and attach the 'isEnrolled' flag
+        const projectsWithStatus = projects.map(project => {
+            const isEnrolled = enrolledProjectIds.includes(project._id.toString());
+            return {
+                ...project,
+                isEnrolled // This will be true if they were invited/joined, false otherwise
+            };
+        });
+
+        return NextResponse.json({ projects: projectsWithStatus }, { status: 200 });
 
     } catch (error) {
         console.error("Fetch Projects Error:", error);
-        return NextResponse.json({ message: "Server error" }, { status: 500 });
-    }
-}
-
-async function sendProjectNotificationEmails(emails: string[], className: string, projectTitle: string) {
-    try {
-        // Resend allows sending to batches (up to 50 at a time). 
-        // For larger classes, you might need to chunk this array.
-        await resend.emails.send({
-            from: 'ProTrack Notifications <no-reply@yourdomain.com>',
-            to: emails, // Send to all students at once via BCC or multiple 'to' fields
-            subject: `New Project Assigned in ${className}`,
-            html: `
-                <div style="font-family: sans-serif; padding: 20px; color: #333;">
-                    <h2 style="color: #10b981;">New Project Alert!</h2>
-                    <p>Hello,</p>
-                    <p>A new project titled <strong>"${projectTitle}"</strong> has just been created for your class: <strong>${className}</strong>.</p>
-                    <p>Please log in to your ProTrack dashboard to review the requirements and form your groups or join solo as instructed by your professor.</p>
-                    <br/>
-                    <a href="https://yourprotrackurl.com/dashboard" style="background-color: #10b981; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Go to Dashboard</a>
-                    <p style="margin-top: 30px; font-size: 12px; color: #888;">This is an automated message from ProTrack. Please do not reply.</p>
-                </div>
-            `
-        });
-        console.log("Notification emails sent successfully.");
-    } catch (error) {
-        console.error("Failed to send notification emails:", error);
+        return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
     }
 }

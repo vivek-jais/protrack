@@ -20,7 +20,7 @@ export default function StudentProjectsHub() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const res = await fetch(`/api/project`); // Restored normal API call
+        const res = await fetch(`/api/project`); 
         if (res.ok) {
           const data = await res.json();
           setProjects(data.projects || []);
@@ -43,9 +43,9 @@ export default function StudentProjectsHub() {
 
       if (res.ok) {
         toast.success("Joined project successfully!", { theme: "dark", transition: Zoom });
-        // Update local state so the button changes to "Open Project" instantly
+        // 🔥 FIX: Update local state to set isEnrolled to true so the UI flips instantly
         setProjects(projects.map(p => 
-          p._id === projectId ? { ...p, joinedStudents: [...p.joinedStudents, myUserId] } : p
+          p._id === projectId ? { ...p, isEnrolled: true } : p
         ));
       } else {
         toast.error(data.message);
@@ -79,7 +79,8 @@ export default function StudentProjectsHub() {
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => {
-            const hasJoined = project.joinedStudents?.includes(myUserId);
+            // 🔥 FIX: Check BOTH the new group-based 'isEnrolled' flag AND the legacy joinedStudents array just in case
+            const hasJoined = project.isEnrolled === true || project.joinedStudents?.includes(myUserId);
 
             return (
               <div key={project._id} className="flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">

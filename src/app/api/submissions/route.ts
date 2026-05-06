@@ -17,49 +17,75 @@ export async function GET() {
         // @ts-ignore
         const userId = session.user.id;
 
-        // 1. Find all groups the user belongs to
-        const userGroups = await Group.find({ "members.student": userId }).select('_id name');
-        const groupIds = userGroups.map(g => g._id);
+        const userGroups = await Group.find({ "members.student": userId })
+            .populate({
+                path: 'projectId',
+                select: 'title stages'
+            })
+            .lean();
 
-        if (groupIds.length === 0) {
+        if (userGroups.length === 0) {
             return NextResponse.json({ submissions: [] }, { status: 200 });
         }
 
-        // 2. Find all projects that have submissions from these groups
-        const projects = await Project.find({
-            "stages.submissions.groupId": { $in: groupIds }
-        }).select("title stages");
-
-        // 3. Flatten the data into a clean, easy-to-read list for the frontend
         let allSubmissions: any[] = [];
 
-        projects.forEach(project => {
-            project.stages.forEach((stage: any, stageIndex: number) => {
-                // Find the submission for this specific stage that belongs to one of the user's groups
-                const groupSubmission = stage.submissions.find((s: any) => 
-                    groupIds.some(id => id.equals(s.groupId))
-                );
+        userGroups.forEach((group: any) => {
+            const project = group.projectId;
+            if (!project) return; 
 
-                if (groupSubmission && groupSubmission.documents.length > 0) {
-                    const groupName = userGroups.find(g => g._id.equals(groupSubmission.groupId))?.name;
+            // --- THE NEW ARCHITECTURE ---
+            (group.stageProgress || []).forEach((progress: any) => {
+                if (progress.status === "Pending") return;
 
-                    allSubmissions.push({
-                        projectId: project._id,
-                        projectTitle: project.title,
-                        stageName: stage.stageName,
-                        stageIndex: stageIndex + 1,
-                        teamName: groupName,
-                        status: groupSubmission.status,
-                        submittedAt: groupSubmission.submittedAt,
-                        documents: groupSubmission.documents,
-                        marksAwarded: groupSubmission.evaluation?.marksAwarded || null,
-                        maxMarks: stage.maxMarks
-                    });
+                const stageBlueprint = project.stages?.find((s: any) => s.stageNumber === progress.stageNumber);
+
+                allSubmissions.push({
+                    projectId: project._id,
+                    projectTitle: project.title,
+                    stageName: stageBlueprint?.name || stageBlueprint?.title || `Stage ${progress.stageNumber}`,
+                    stageIndex: progress.stageNumber,
+                    teamName: group.name,
+                    // 🔥 THE FIX: Translate "Graded" back into "evaluated" for the frontend
+                    status: progress.status.toLowerCase() === 'graded' ? 'evaluated' : 'submitted',
+                    submittedAt: progress.submittedAt,
+                    documents: progress.submissionUrl ? [{
+                        fileName: progress.submissionUrl.split('/').pop().replace(/^\d+-/, ''), 
+                        fileUrl: progress.submissionUrl
+                    }] : [],
+                    marksAwarded: progress.marksAwarded || null,
+                    maxMarks: stageBlueprint?.maxMarks || stageBlueprint?.marks || 100
+                });
+            });
+
+            // --- LEGACY FALLBACK ---
+            project.stages?.forEach((stage: any, index: number) => {
+                const legacySub = stage.submissions?.find((s: any) => String(s.groupId) === String(group._id));
+
+                if (legacySub && legacySub.documents?.length > 0) {
+                    const alreadyAdded = allSubmissions.some(sub => 
+                        String(sub.projectId) === String(project._id) && sub.stageIndex === (index + 1)
+                    );
+
+                    if (!alreadyAdded) {
+                        allSubmissions.push({
+                            projectId: project._id,
+                            projectTitle: project.title,
+                            stageName: stage.stageName || stage.name || stage.title || `Stage ${index + 1}`,
+                            stageIndex: index + 1,
+                            teamName: group.name,
+                            // 🔥 THE FIX: Pass "evaluated" directly through from the old database schema
+                            status: legacySub.status === 'evaluated' ? 'evaluated' : 'submitted',
+                            submittedAt: legacySub.submittedAt,
+                            documents: legacySub.documents,
+                            marksAwarded: legacySub.evaluation?.marksAwarded || null,
+                            maxMarks: stage.maxMarks || stage.marks || 100
+                        });
+                    }
                 }
             });
         });
 
-        // 4. Sort by most recent submission first
         allSubmissions.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
 
         return NextResponse.json({ submissions: allSubmissions }, { status: 200 });

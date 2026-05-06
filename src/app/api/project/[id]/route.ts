@@ -16,32 +16,64 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        // Fetch project and deeply populate all relevant details for the Workspace UI
-        const project = await Project.findById(projectId)
-            .populate("professor", "name email image")
-            .populate("classId", "name code")
-            // Deep populate: Fetch the Group details for each submission
-            .populate({
-                path: "stages.submissions.groupId",
-                select: "name members",
-                model: Group
-            })
-            // Deep populate: Fetch the Student details who clicked 'upload'
-            .populate({
-                path: "stages.submissions.submittedBy",
-                select: "name image",
-                model: User
-            });
+        // @ts-ignore
+        const userId = session.user.id;
+        const userName = session.user.name || "Student";
 
+        const project = await Project.findById(projectId).populate("professor", "name email image");
+        
         if (!project) {
             return NextResponse.json({ message: "Project not found" }, { status: 404 });
         }
 
-        return NextResponse.json({ project }, { status: 200 });
+        // 2. Try to find the user's group
+        let userGroup = await Group.findOne({ 
+            projectId: projectId, 
+            "members.student": userId 
+        }).populate("members.student", "name email image");
+
+        if (!userGroup && project.joinedStudents && project.joinedStudents.includes(userId)) {
+            
+            console.log("Ghost state detected! Auto-generating missing Solo Group...");
+
+            const initialStageProgress = (project.stages || []).map((stage: any, index: number) => ({
+                stageNumber: stage.stageNumber || (index + 1),
+                status: "Pending",
+                marksAwarded: 0,
+                feedback: ""
+            }));
+
+            const groupPayload: any = {
+                name: `${userName}'s Solo Workspace`,
+                projectId: project._id,
+                leader: userId,
+                members: [{
+                    student: userId,           
+                    assignedRole: "Solo Developer",     
+                    joinStatus: "joined"       
+                }],
+                status: "active",
+                currentStage: 1,
+                stageProgress: initialStageProgress
+            };
+
+            if (project.classId) {
+                groupPayload.classId = project.classId;
+            }
+
+            // Create the missing group in the database
+            const newGroup = await Group.create(groupPayload);
+
+            // Fetch and populate it so it instantly matches what the frontend expects
+            userGroup = await Group.findById(newGroup._id).populate("members.student", "name email image");
+        }
+
+        // Return the group (either the existing one, or the newly healed one!)
+        return NextResponse.json({ project: project, group: userGroup }, { status: 200 });
 
     } catch (error) {
-        console.error("Get Project Workspace Error:", error);
-        return NextResponse.json({ message: "Server error" }, { status: 500 });
+        console.error("Check Group Error:", error);
+        return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
     }
 }
 
@@ -76,8 +108,6 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         // Protect internal tracking fields from direct overwriting via this route
         const { totalMarks, maxTotalMarks, stages, status, ...safeUpdateData } = body;
 
-        // If the teacher sends an updated stages array (e.g., changing stage names/maxMarks)
-        // Ensure we don't accidentally wipe out student submissions inside those stages
         if (stages) {
             const formattedStages = stages.map((stage: any) => ({
                 ...stage,
