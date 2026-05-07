@@ -9,6 +9,7 @@ import {
   AlertCircle, Zap, Target
 } from "lucide-react";
 import { redirect } from "next/navigation";
+import PusherNotifications from "@/components/PusherNotifications";
 
 export default function StudentDashboard() {
   const { data: session } = useSession();
@@ -414,15 +415,26 @@ export default function StudentDashboard() {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between bg-white px-5 py-3 dark:bg-zinc-900">
-                      <div className="flex -space-x-2">
+                    <div className="bg-white px-5 py-3 dark:bg-zinc-900">
+                      <div className="flex -space-x-2 mb-3">
                         {[1, 2, 3].map((_, i) => (
                           <img key={i} src={`https://api.dicebear.com/7.x/notionists/svg?seed=${item._id + i}`} alt="Student Avatar" className="h-7 w-7 rounded-full border-2 border-white bg-zinc-100 dark:border-zinc-900" />
                         ))}
                       </div>
-                      <Link href={`dashboard//class/${item._id}`} className="text-sm font-medium text-zinc-900 hover:text-blue-600 dark:text-zinc-100 dark:hover:text-blue-400 flex items-center gap-1">
-                        Enter Workspace <ArrowRight className="h-3.5 w-3.5" />
-                      </Link>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <Link
+                          href={`/dashboard/class/${item._id}/workspace`}
+                          className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                        >
+                          Workspace <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                        </Link>
+                        <Link
+                          href={`/dashboard/class/${item._id}`}
+                          className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:border-zinc-600 dark:hover:text-white"
+                        >
+                          View Students
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 );

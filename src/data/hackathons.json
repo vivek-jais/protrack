@@ -29,7 +29,106 @@
     "mode": "Hybrid",
     "tags": ["Education", "SaaS", "GenAI"],
     "image": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop",
-    "applyLink": "#",
+    "applyLink": "https://hackathons.hackclub.com",
+    "status": "Upcoming"
+  },
+  {
+    "id": "4",
+    "title": "AI Innovation Challenge",
+    "organization": "OpenAI Developers Hub",
+    "date": "September 05 - 07, 2026",
+    "mode": "Online",
+    "tags": ["AI", "LLMs", "Productivity"],
+    "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop",
+    "applyLink": "https://devpost.com/hackathons",
+    "status": "Live"
+  },
+  {
+    "id": "5",
+    "title": "GreenTech HackFest",
+    "organization": "UN Climate Labs",
+    "date": "October 11 - 13, 2026",
+    "mode": "Hybrid",
+    "tags": ["Climate", "Sustainability", "IoT"],
+    "image": "https://images.unsplash.com/photo-1497436072909-f5e4be8c8e0f?q=80&w=800&auto=format&fit=crop",
+    "applyLink": "https://www.hackerearth.com/challenges/",
+    "status": "Upcoming"
+  },
+  {
+    "id": "6",
+    "title": "CyberShield CTF & Hackathon",
+    "organization": "Cisco Security",
+    "date": "May 20 - 22, 2026",
+    "mode": "Offline",
+    "tags": ["Cybersecurity", "CTF", "Cloud"],
+    "image": "https://images.unsplash.com/photo-1510511459019-5dda7724fd87?q=80&w=800&auto=format&fit=crop",
+    "applyLink": "https://mlh.io",
+    "status": "Closed"
+  },
+  {
+    "id": "7",
+    "title": "HealthTech AI Jam",
+    "organization": "WHO Innovation Forum",
+    "date": "June 25 - 27, 2026",
+    "mode": "Online",
+    "tags": ["Healthcare", "AI", "Data Science"],
+    "image": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=800&auto=format&fit=crop",
+    "applyLink": "https://devfolio.co/hackathons",
+    "status": "Live"
+  },
+  {
+    "id": "8",
+    "title": "Blockchain Builders Summit",
+    "organization": "Ethereum India",
+    "date": "November 18 - 20, 2026",
+    "mode": "Offline",
+    "tags": ["Blockchain", "Smart Contracts", "DeFi"],
+    "image": "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=800&auto=format&fit=crop",
+    "applyLink": "https://ethglobal.com",
+    "status": "Upcoming"
+  },
+  {
+    "id": "9",
+    "title": "AR/VR Experience Hack",
+    "organization": "Meta XR Labs",
+    "date": "August 01 - 03, 2026",
+    "mode": "Hybrid",
+    "tags": ["AR/VR", "Unity", "Metaverse"],
+    "image": "https://images.unsplash.com/photo-1626379953822-baec19c3accd?q=80&w=800&auto=format&fit=crop",
+    "applyLink": "https://challengepost.com",
+    "status": "Upcoming"
+  },
+  {
+    "id": "10",
+    "title": "Cloud Native Build Sprint",
+    "organization": "Google Cloud Community",
+    "date": "July 15 - 17, 2026",
+    "mode": "Online",
+    "tags": ["Cloud", "Kubernetes", "DevOps"],
+    "image": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800&auto=format&fit=crop",
+    "applyLink": "https://cloud.google.com/events",
+    "status": "Live"
+  },
+  {
+    "id": "11",
+    "title": "Women in Tech Hack League",
+    "organization": "Women Who Code",
+    "date": "September 22 - 24, 2026",
+    "mode": "Hybrid",
+    "tags": ["Diversity", "Frontend", "AI"],
+    "image": "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=800&auto=format&fit=crop",
+    "applyLink": "https://www.womenwhocode.com",
+    "status": "Upcoming"
+  },
+  {
+    "id": "12",
+    "title": "Startup Weekend CodeFest",
+    "organization": "Techstars",
+    "date": "December 05 - 07, 2026",
+    "mode": "Offline",
+    "tags": ["Startups", "Pitching", "MVP"],
+    "image": "https://images.unsplash.com/photo-1515169067868-5387ec356754?q=80&w=800&auto=format&fit=crop",
+    "applyLink": "https://www.techstars.com/events",
     "status": "Upcoming"
   }
 ]

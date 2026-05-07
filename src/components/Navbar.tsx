@@ -1,12 +1,14 @@
 "use client";
 
-import { Menu, X, Bell, Search, Plus, Sparkles, Moon, Sun } from "lucide-react"; // <-- Added Moon and Sun
+import { Menu, X, Bell, Search, Plus, Sparkles, Moon, Sun } from "lucide-react"; 
 import Link from "next/link";
 import { useSidebar } from "@/context/SidebarContext";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useTheme } from "next-themes"; // <-- Added useTheme
-import { useEffect, useState } from "react"; // <-- Added React hooks
+import { useTheme } from "next-themes"; 
+import NotificationBell from "./PusherNotifications";
+import { useEffect, useState } from "react"; 
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
   const { toggle, isOpen } = useSidebar();
@@ -16,11 +18,32 @@ export default function Navbar() {
   // Theme state
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-
+  const [classIds, setClassIds] = useState<string[]>([]);
+  const pathname=usePathname()
   // Ensure component is mounted before rendering theme icons to avoid hydration errors
   useEffect(() => {
     setMounted(true);
-  }, []);
+    const fetchUserClasses = async () => {
+      try {
+        const userId = (session?.user as any)?.id || (session?.user as any)?._id;
+        if (!userId) return;
+
+        const res = await fetch(`/api/user/classes/${userId}`);
+        if (res.ok) {
+          const data = await res.json();
+          const ids = data.classes?.map((c: any) => c._id?.toString()).filter(Boolean) || [];
+          setClassIds(ids);
+        } else {
+          console.error("Failed to fetch classes for notifications", await res.text());
+        }
+      } catch (error) {
+        console.error("Failed to fetch classes for notifications", error);
+      }
+    };
+    if (session?.user) {
+      fetchUserClasses();
+    }
+  }, [session,pathname]);
 
   //@ts-ignore
   const role = session?.user?.role;
@@ -88,10 +111,9 @@ export default function Navbar() {
           )}
         </button>
 
-        <button className="relative rounded-full p-2.5 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
-          <Bell className="h-5 w-5" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-zinc-950"></span>
-        </button>
+        
+          <NotificationBell classIds={classIds}/>
+          
 
         <button className="ml-1 h-9 w-9 overflow-hidden rounded-full ring-2 ring-transparent transition-all hover:ring-emerald-500/50">
           <div className="h-10 w-10 rounded-full overflow-hidden">

@@ -15,13 +15,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
         }
 
-        const classData = await Class.findById(classId).populate("students", "name email image");
+        const classData = await Class.findById(classId).populate("students", "name email image").populate('professor','name');
 
         if (!classData) {
             return NextResponse.json({ message: 'Class not found' }, { status: 404 });
         }
 
-        return NextResponse.json({ students: classData.students }, { status: 200 });
+        return NextResponse.json({ class: classData, students: classData.students }, { status: 200 });
 
     } catch (error) {
         console.error("Fetch Students Error:", error);

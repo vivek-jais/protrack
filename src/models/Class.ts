@@ -23,7 +23,7 @@ const ClassSchema: Schema<IClass> = new Schema(
       type: String,
       required: [true, "Class code is required"],
       unique: true,
-      uppercase: true,
+      uppercase: true, 
       trim: true,
     },
     professor: {

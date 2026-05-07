@@ -176,20 +176,30 @@ export default function TeacherDashboard() {
                             <Clock className="h-4 w-4 text-emerald-600" />
                             <span className="font-medium">Schedule</span>
                           </div>
-                          <span className="font-semibold text-gray-900 dark:text-zinc-100 truncate max-w-[120px] text-right">
+                          <span className="font-semibold text-gray-900 dark:text-zinc-100 truncate max-w-30 text-right">
                             {cls.schedule || "TBD"}
                           </span>
                         </div>
                       </div>
 
-                      {/* View Details Button */}
-                      <Link 
-                        href={`/teacherDashboard/class/${cls._id}`} 
-                        className="mt-auto flex w-full items-center justify-center gap-2 rounded-lg bg-gray-50 py-3 text-sm font-semibold text-gray-900 transition-colors group-hover:bg-emerald-600 group-hover:text-white dark:bg-zinc-800/50 dark:text-zinc-100 dark:group-hover:bg-emerald-600 dark:group-hover:text-white"
-                      >
-                        Enter Workspace
-                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                      </Link>
+                      {/* Actions */}
+                      <div className="mt-auto grid gap-3 sm:grid-cols-2">
+                        <Link
+                          href={`/teacherDashboard/class/${cls._id}/workspace`}
+                          className="flex items-center justify-center gap-2 rounded-lg bg-emerald-600 py-3 text-sm font-semibold text-white transition-all hover:bg-emerald-700"
+                        >
+                          Workspace
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
+
+                        <Link
+                          href={`/teacherDashboard/class/${cls._id}`}
+                          className="flex items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white py-3 text-sm font-semibold text-zinc-900 transition-all hover:border-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-emerald-500 dark:hover:bg-emerald-950/50 dark:hover:text-emerald-300"
+                        >
+                          <Users className="h-4 w-4 text-emerald-500" />
+                          View Students
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 );
