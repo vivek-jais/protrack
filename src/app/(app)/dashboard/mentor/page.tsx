@@ -125,7 +125,7 @@ export default function ProfessorMentorPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8000/api/mentor/chat", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mentor/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

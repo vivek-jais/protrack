@@ -34,7 +34,7 @@ export default function HybridProjectBuilder() {
     if (!input) return;
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/builder/chat`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/builder/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         // Send the chat text AND the current manual form state to sync them
