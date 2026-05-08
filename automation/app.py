@@ -120,7 +120,7 @@ app = FastAPI(title="ProTrack AI Architect")
 # Allow Next.js frontend to communicate with this server
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"], 
+    allow_origins=["http://localhost:3000","https://protrack-ten.vercel.app"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
