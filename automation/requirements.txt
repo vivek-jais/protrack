@@ -1,0 +1,18 @@
+# Web Framework & Server
+fastapi
+uvicorn
+requests
+pydantic
+typing-extensions
+
+# Environment Variables
+python-dotenv
+
+# AI, LangChain & LangGraph
+langgraph
+langchain-core
+langchain-google-genai
+
+# File Processing
+PyPDF2
+python-docx
