@@ -63,9 +63,9 @@ export default function Navbar() {
           {isOpen ? <X className="h-6 w-6 cursor-pointer" /> : <Menu className="h-6 w-6 cursor-pointer" />}
         </button>
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-tr from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/20">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg  shadow-lg shadow-emerald-500/20">
             
-            <img src='/protrack_logo.svg'></img>
+            <img src='/logo.png'></img>
           </div>
           <span className="bg-linear-to-r from-zinc-800 to-zinc-600 bg-clip-text text-xl font-bold text-transparent dark:from-zinc-100 dark:to-zinc-400">
             ProTrack

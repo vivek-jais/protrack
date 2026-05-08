@@ -8,7 +8,10 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 
 export const metadata: Metadata = {
   title: "Protrack",
-  description: "Project Management",
+  description: "Project Tracking System",
+  icons:{
+    icon:"/logo.png"
+  }
 };
 
 export default function RootLayout({
