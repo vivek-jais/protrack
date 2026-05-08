@@ -1,14 +1,14 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import React, { useState, useEffect } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import { ToastContainer, toast, Zoom } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Users, X, CheckCircle2, Loader2, UserPlus, FolderDot } from "lucide-react";
 
-export default function CreateGroup() {
+function CreateGroupContent() {
   const { data: session } = useSession();
   const router = useRouter();
   
@@ -245,39 +245,22 @@ export default function CreateGroup() {
             </h3>
             <p className="text-xs text-gray-500 mt-1 dark:text-zinc-400">Showing students not yet in a team.</p>
           </div>
-          
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-            {!selectedProjectId ? (
-              <div className="flex flex-col items-center justify-center h-full text-center p-4">
-                <FolderDot className="h-8 w-8 text-gray-300 mb-2 dark:text-zinc-700" />
-                <p className="text-sm font-medium text-gray-500 dark:text-zinc-400">Select a project to view available teammates.</p>
-              </div>
-            ) : isFetchingRoster ? (
-              <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-emerald-500" /></div>
-            ) : availableRoster.length === 0 ? (
-              <div className="text-center py-10 text-sm text-gray-500 dark:text-zinc-400">All classmates are already assigned!</div>
-            ) : (
-              availableRoster.map((student) => {
-                const isAdded = addedMembers.some(m => m.id === student._id);
-                return (
-                  <div key={student._id} className={`p-4 rounded-2xl border transition-all duration-200 ${isAdded ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/5' : 'border-gray-200 bg-gray-50 hover:border-emerald-300 dark:border-zinc-800 dark:bg-[#09090b] dark:hover:border-emerald-500'}`}>
-                    <div className="flex items-center gap-3">
-                      <img src={student.image || `https://api.dicebear.com/7.x/initials/svg?seed=${student.name}`} className="h-10 w-10 rounded-full border border-gray-200 dark:border-zinc-700 object-cover" alt={student.name} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold truncate text-gray-900 dark:text-white">{student.name}</p>
-                        <p className="text-xs text-gray-500 truncate dark:text-zinc-400">{student.email}</p>
-                      </div>
-                    </div>
-                    <button type="button" disabled={isAdded} onClick={() => addMemberFromRoster(student)} className={`mt-4 w-full py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 ${isAdded ? 'bg-emerald-600 text-white dark:bg-emerald-500' : 'bg-white border border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 dark:bg-[#18181b] dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-emerald-500 dark:hover:text-emerald-400'}`}>
-                      {isAdded ? <>Selected</> : <><UserPlus className="h-3.5 w-3.5" /> Invite</>}
-                    </button>
-                  </div>
-                );
-              })
-            )}
-          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CreateGroup() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+        </div>
+      }
+    >
+      <CreateGroupContent />
+    </Suspense>
   );
 }
