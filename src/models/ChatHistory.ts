@@ -11,7 +11,7 @@ export interface IChatModel extends Document{
 }
 const ChatSessionSchema=new Schema<IChatModel>({
     studentId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  projectId: { type: Schema.Types.ObjectId, ref: 'Project', required: true },
+  projectId: { type: Schema.Types.ObjectId, ref: 'Project', required: false },
   threadId: { type: String, required: true, unique: true },
   messages: [{
     role: { type: String, enum: ['user', 'assistant'], required: true },
