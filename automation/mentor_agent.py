@@ -52,6 +52,7 @@ class MentorState(TypedDict):
     resume_context: Optional[str]   # Extracted Resume text
 
 #professor
+#professor
 def professor_chat_node(state: MentorState):
     """Dynamically adjusts its intelligence and enforces strict topic boundaries."""
     
@@ -110,6 +111,12 @@ def professor_chat_node(state: MentorState):
         Politely ask them in one short sentence to upload their SRS and Resume so you can give them personalized guidance.
         """
 
+    # 🔥 THE FIX: CRITICAL CONTEXT OVERRIDE
+    system_prompt += """
+    [CRITICAL CONTEXT OVERRIDE]
+    The Resume and SRS contexts provided above are live and dynamic. The user can upload new versions at any time. If the current context contains new information, skills, or experiences that contradict our previous conversation history, you MUST ALWAYS trust the current context above past messages. 
+    """
+
     #strict instructions
     system_prompt += """
     [CRITICAL GUARDRAIL - STRICT ENFORCEMENT]
@@ -117,6 +124,7 @@ def professor_chat_node(state: MentorState):
     If the user asks a question that falls outside of these domains (e.g., cooking, general trivia, politics, entertainment, writing essays for other subjects), you MUST refuse to answer.
     Reply with EXACTLY this phrase and nothing else: "Sorry, I can't answer that. Let's keep our discussion focused on your project and academic growth."
     """    
+    
     conversation = [SystemMessage(content=system_prompt)] + state["messages"]
     response = llm.invoke(conversation)
     return {"messages": [response]}

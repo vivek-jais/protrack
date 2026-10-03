@@ -49,12 +49,11 @@ export const authOption: NextAuthOptions = {
                 await connectDb();
                 const dbUser = await User.findOne({ email: session.user.email });
                 if (dbUser) {
-                    // @ts-ignore
                     session.user.id = dbUser._id.toString();
-                    // @ts-ignore
                     session.user.role = dbUser.role;
-                    //@ts-ignore
-                    session.user.image=dbUser.image
+                    if (dbUser.image) {
+                        session.user.image = dbUser.image;
+                    }
                 }
             } catch (error) {
                 console.error("Session Error:", error);

@@ -1,10 +1,12 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
+export type UserRole = "student" | "teacher" | "pending";
+
 export interface IUser extends Document {
   name: string;
   email: string;
   image?: string;
-  role: "student" | "teacher" | "pending";
+  role: UserRole;
   bio?: string;
   skills: string[];
   university: string;

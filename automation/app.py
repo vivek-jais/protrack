@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 from typing_extensions import TypedDict
+from fastapi.responses import StreamingResponse
+import json
 
 # LangGraph & LangChain Imports
 from langgraph.graph import StateGraph, START, END
@@ -144,26 +146,33 @@ class MentorChatRequest(BaseModel):
 
 @app.post("/api/mentor/chat")
 async def chat_with_professor(req: MentorChatRequest):
-    """Endpoint for the Student-Professor Chatbot."""
+    """Endpoint for the Student-Professor Chatbot (Now Streaming in Real-Time)."""
     
-    # The thread_id is crucial: it tells LangGraph to fetch this specific student's chat history!
     config = {"configurable": {"thread_id": req.thread_id}}
     
-    # Format the input for LangGraph
     input_data = {
-        "messages": [("user", req.message)], # Wrap the new message as a user message
+        "messages": [("user", req.message)],
         "student_profile": req.student_profile,
         "project_context": req.project_context,
         "resume_context": req.resume_context
     }
     
-    # Invoke the isolated Professor Agent
-    result = mentor_app.invoke(input_data, config=config)
-    
-    # Extract the very last message (the AI's response) from the updated state
-    ai_response = result["messages"][-1].content
-    
-    return {"response": ai_response}
+    async def event_generator():
+        # astream_events intercepts the live tokens streaming from Gemini in real-time
+        async for event in mentor_app.astream_events(input_data, config=config, version="v2"):
+            kind = event["event"]
+            
+            if kind == "on_chat_model_stream":
+                chunk_content = event["data"]["chunk"].content
+                if chunk_content:
+                    # Yield data in the standard Server-Sent Events (SSE) format
+                    yield f"data: {json.dumps({'content': chunk_content})}\n\n"
+                    
+        # Send a termination signal so the Next.js frontend knows to stop listening
+        yield "data: [DONE]\n\n"
+
+    # Return the stream directly to Next.js instead of waiting for the full response
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 # --- Routes ---
 @app.post("/api/builder/chat")
